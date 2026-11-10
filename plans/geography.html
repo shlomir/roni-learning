@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>תוכנית אתר הגאוגרפיה</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&family=Secular+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1026; --bg2:#141a3a; --card:#1b2250; --card2:#232c66;
+  --ink:#f4f1ff; --muted:#aab0d6; --line:rgba(255,255,255,.12);
+  --gold:#ffcf4a; --coral:#ff6b6b; --mint:#3ee8b5; --sky:#5cc8ff; --violet:#b48cff; --pink:#ff7ad9;
+  --parch:#f6e7c1; --parch-ink:#4a3418;
+  --r:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Rubik,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65;overflow-x:hidden}
+h1,h2,h3,.display{font-family:"Secular One",Rubik,sans-serif;font-weight:400;line-height:1.2;margin:0}
+a{color:var(--sky)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+section{padding:72px 0;position:relative}
+.eyebrow{display:inline-block;font-weight:700;font-size:.85rem;letter-spacing:.04em;color:var(--gold);background:rgba(255,207,74,.1);border:1px solid rgba(255,207,74,.3);padding:4px 14px;border-radius:99px;margin-bottom:14px}
+.h2{font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:10px}
+.lead{color:var(--muted);font-size:1.12rem;max-width:760px}
+
+/* ---------- starfield + hero ---------- */
+#stars{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.hero{min-height:100svh;display:flex;align-items:center;padding:60px 0 40px;position:relative;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(2.6rem,7vw,5.2rem);background:linear-gradient(100deg,var(--gold),var(--coral) 40%,var(--pink) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 30px rgba(255,107,107,.25))}
+.hero .sub{font-size:1.3rem;color:var(--muted);margin:16px 0 26px}
+.pill-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+.pill{background:var(--card);border:1px solid var(--line);padding:8px 14px;border-radius:99px;font-size:.95rem}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font:700 1rem Rubik,sans-serif;padding:14px 22px;border-radius:16px;color:#1b1030;background:linear-gradient(135deg,var(--gold),#ff9f43);box-shadow:0 8px 0 #b86a12,0 14px 30px rgba(255,159,67,.35);transition:transform .12s,box-shadow .12s;text-decoration:none}
+.btn:active{transform:translateY(6px);box-shadow:0 2px 0 #b86a12}
+.btn.ghost{background:var(--card2);color:var(--ink);box-shadow:0 8px 0 #0f1438}
+.btn.ghost:active{box-shadow:0 2px 0 #0f1438}
+.btn.sm{padding:9px 14px;font-size:.9rem;border-radius:12px;box-shadow:0 5px 0 #b86a12}
+.btn.ghost.sm{box-shadow:0 5px 0 #0f1438}
+
+.countdown{display:flex;gap:12px;margin-top:30px}
+.cd{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 0;width:82px;text-align:center}
+.cd b{display:block;font:400 2rem "Secular One";color:var(--gold)}
+.cd span{font-size:.8rem;color:var(--muted)}
+.cd-label{color:var(--coral);font-weight:700;margin-top:14px}
+
+/* spinning globe */
+.globe-stage{position:relative;aspect-ratio:1;max-width:440px;margin-inline:auto}
+.globe{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle at 32% 30%,#7fe0ff,#1d7bd8 45%,#0b2f74 80%);box-shadow:inset -30px -30px 60px rgba(0,0,0,.45),0 0 80px rgba(92,200,255,.45);overflow:hidden}
+.globe::before{content:"";position:absolute;inset:0;width:200%;background:
+ radial-gradient(ellipse 14% 20% at 10% 35%,#3ee8b5 60%,transparent 62%),
+ radial-gradient(ellipse 9% 24% at 22% 62%,#3ee8b5 60%,transparent 62%),
+ radial-gradient(ellipse 16% 14% at 36% 30%,#5af0a0 60%,transparent 62%),
+ radial-gradient(ellipse 8% 16% at 38% 58%,#ffcf4a 60%,transparent 62%),
+ radial-gradient(ellipse 7% 6% at 45% 72%,#5af0a0 60%,transparent 62%),
+ radial-gradient(ellipse 14% 20% at 60% 35%,#3ee8b5 60%,transparent 62%),
+ radial-gradient(ellipse 9% 24% at 72% 62%,#3ee8b5 60%,transparent 62%),
+ radial-gradient(ellipse 16% 14% at 86% 30%,#5af0a0 60%,transparent 62%),
+ radial-gradient(ellipse 8% 16% at 88% 58%,#ffcf4a 60%,transparent 62%),
+ radial-gradient(ellipse 7% 6% at 95% 72%,#5af0a0 60%,transparent 62%);
+ animation:spin 14s linear infinite}
+@keyframes spin{to{transform:translateX(-50%)}}
+.orbit{position:absolute;inset:0;border:2px dashed rgba(255,255,255,.18);border-radius:50%;animation:rot 22s linear infinite}
+.orbit .sat{position:absolute;top:-18px;left:50%;font-size:2rem;transform:translateX(-50%)}
+.orbit.o2{inset:-6%;animation-duration:34s;animation-direction:reverse;border-color:rgba(255,207,74,.18)}
+.orbit.o2 .sat{top:auto;bottom:-18px}
+@keyframes rot{to{transform:rotate(360deg)}}
+.float{position:absolute;font-size:2.2rem;animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-14px) rotate(6deg)}}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+.card{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:22px;position:relative}
+.card h3{font-size:1.25rem;margin-bottom:6px}
+.card p{margin:.3em 0;color:var(--muted)}
+.card ul{margin:.4em 0;padding-inline-start:1.1em;color:var(--muted)}
+.card li{margin:.2em 0}
+.emoji{font-size:2.2rem;line-height:1;margin-bottom:10px;display:block}
+.tag{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:99px;background:rgba(255,255,255,.08);margin:2px}
+
+/* topic chips */
+.topic{border-top:4px solid var(--c)}
+.topic .num{position:absolute;top:14px;left:16px;font:400 2.4rem "Secular One";color:var(--c);opacity:.35}
+
+/* content bank */
+.bank details{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:12px;overflow:hidden}
+.bank summary{cursor:pointer;padding:16px 20px;font:400 1.2rem "Secular One";list-style:none;display:flex;align-items:center;gap:12px}
+.bank summary::-webkit-details-marker{display:none}
+.bank summary::after{content:"＋";margin-inline-start:auto;color:var(--gold);transition:transform .2s}
+.bank details[open] summary::after{transform:rotate(45deg)}
+.bank .body{padding:0 20px 18px;color:var(--muted)}
+.bank .body b{color:var(--ink)}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.fact{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:.95rem}
+.stages{display:flex;gap:8px;flex-wrap:wrap;counter-reset:s}
+.stage{flex:1 1 170px;background:rgba(255,255,255,.05);border-radius:14px;padding:12px;border:1px solid var(--line);counter-increment:s}
+.stage::before{content:"שלב " counter(s);display:block;font:400 1rem "Secular One";color:var(--gold)}
+.compare{width:100%;border-collapse:collapse;font-size:.95rem}
+.compare th,.compare td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.compare th{color:var(--gold);font-weight:700}
+.warn{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.4);border-radius:14px;padding:12px 16px;color:#ffd0d0;margin-top:12px}
+
+/* ---------- ideas ---------- */
+.idea{margin:34px 0;border-radius:30px;border:1px solid var(--line);background:linear-gradient(150deg,color-mix(in srgb,var(--c) 18%,var(--card)),var(--bg2) 60%);padding:32px;position:relative;overflow:hidden}
+.idea::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:var(--c);filter:blur(120px);opacity:.18;top:-160px;left:-120px;pointer-events:none}
+.idea-head{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:8px;position:relative}
+.idea-num{font:400 3.6rem "Secular One";color:var(--c);line-height:1;text-shadow:0 0 30px var(--c)}
+.idea-title{font-size:clamp(1.6rem,3.6vw,2.3rem)}
+.idea-tagline{color:var(--muted);font-size:1.1rem}
+.idea-body{display:grid;grid-template-columns:1fr 330px;gap:28px;margin-top:20px;position:relative}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink);font:600 .92rem Rubik;padding:8px 14px;border-radius:12px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--c);color:#14102a;border-color:transparent}
+.panel{display:none;animation:fade .3s}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.panel ul{padding-inline-start:1.2em;margin:.3em 0}
+.panel li{margin:.35em 0}
+.panel li b{color:var(--c)}
+.meters{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px;margin-top:18px}
+.meter label{font-size:.85rem;color:var(--muted);display:flex;justify-content:space-between}
+.bar{height:9px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),#fff);border-radius:9px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.idea-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+/* phone mockup */
+.phone{width:100%;max-width:300px;aspect-ratio:9/17;margin-inline:auto;background:#05081a;border-radius:38px;padding:12px;box-shadow:0 0 0 2px #2a3270,0 30px 60px rgba(0,0,0,.5),0 0 60px color-mix(in srgb,var(--c) 30%,transparent);position:relative}
+.phone::before{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:70px;height:6px;border-radius:6px;background:#1a2050;z-index:3}
+.screen{width:100%;height:100%;border-radius:28px;overflow:hidden;position:relative;font-size:.8rem}
+
+/* mock 1 – island path */
+.m1{background:linear-gradient(#5cc8ff,#1d7bd8 70%,#0b2f74)}
+.m1 .isl{position:absolute;width:74px;height:54px;border-radius:50%;background:radial-gradient(#ffe7a0,#e8b85a);display:grid;place-items:center;font-size:1.5rem;box-shadow:0 6px 0 #b88a3a}
+.m1 .isl small{position:absolute;bottom:-20px;font-size:.66rem;font-weight:700;color:#fff;white-space:nowrap;text-shadow:0 1px 3px #0008}
+.m1 svg{position:absolute;inset:0}
+.m1 .hud{position:absolute;top:30px;inset-inline:12px;display:flex;justify-content:space-between;color:#fff;font-weight:700;background:#0005;border-radius:12px;padding:5px 10px}
+.m1 .me{position:absolute;font-size:1.6rem;animation:bob 1.6s infinite}
+/* mock 2 – escape room */
+.m2{background:radial-gradient(circle at 50% 40%,#3a2a12,#120a04)}
+.m2 .chest{position:absolute;top:36%;left:50%;transform:translateX(-50%);font-size:4rem;filter:drop-shadow(0 0 20px #ffcf4a)}
+.m2 .locks{position:absolute;bottom:22%;inset-inline:0;display:flex;justify-content:center;gap:6px}
+.m2 .lock{width:36px;height:42px;border-radius:8px;background:#5a4220;border:2px solid #ffcf4a55;display:grid;place-items:center;font-size:1.1rem}
+.m2 .lock.ok{background:#1f6b4c;border-color:#3ee8b5}
+.m2 .tt{position:absolute;top:34px;width:100%;text-align:center;color:var(--parch);font:400 1rem "Secular One"}
+.m2 .torch{position:absolute;top:22%;font-size:1.6rem;animation:flick 1.2s infinite alternate}
+@keyframes flick{to{opacity:.6;transform:scale(.92)}}
+/* mock 3 – timeline */
+.m3{background:linear-gradient(180deg,#2a1450,#0b1026)}
+.m3 .tl{position:absolute;top:60px;bottom:60px;right:50%;width:4px;background:linear-gradient(#ffcf4a,#5cc8ff)}
+.m3 .ev{position:absolute;right:calc(50% - 22px);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:1.3rem;background:var(--card2);border:2px solid var(--gold)}
+.m3 .lbl{position:absolute;font-size:.66rem;color:#fff;width:100px;font-weight:600}
+.m3 .portal{position:absolute;bottom:14px;inset-inline:16px;text-align:center;background:linear-gradient(90deg,#b48cff,#ff7ad9);color:#1a0f30;border-radius:14px;padding:7px;font-weight:900}
+/* mock 4 – factory */
+.m4{background:linear-gradient(#e9f6ff,#bfe3ff)}
+.m4 .belt{position:absolute;bottom:90px;inset-inline:0;height:20px;background:repeating-linear-gradient(90deg,#444 0 14px,#666 14px 28px);animation:belt 1s linear infinite}
+@keyframes belt{to{background-position:28px 0}}
+.m4 .st{position:absolute;bottom:118px;width:52px;height:60px;border-radius:10px;background:#fff;box-shadow:0 4px 0 #8ab;display:grid;place-items:center;font-size:1.4rem}
+.m4 .plane{position:absolute;top:60px;font-size:2rem;animation:fly 5s linear infinite}
+@keyframes fly{from{right:-40px}to{right:110%}}
+.m4 .coins{position:absolute;top:28px;inset-inline:12px;display:flex;justify-content:space-between;font-weight:900;color:#0b2f74}
+.m4 .cust{position:absolute;bottom:20px;inset-inline:12px;background:#fff;border-radius:14px;padding:8px;color:#123;box-shadow:0 4px 0 #8ab;font-weight:600}
+/* mock 5 – show */
+.m5{background:radial-gradient(circle at 50% 0,#ff7ad9,#3b0f5a 55%,#12052a)}
+.m5 .q{position:absolute;top:70px;inset-inline:14px;background:#fff;color:#2a0f40;border-radius:14px;padding:10px;font-weight:700;text-align:center}
+.m5 .ans{position:absolute;inset-inline:14px;border-radius:12px;padding:8px;font-weight:700;color:#fff;text-align:center}
+.m5 .lights{position:absolute;top:22px;inset-inline:0;display:flex;justify-content:space-around}
+.m5 .lights i{width:10px;height:10px;border-radius:50%;background:#ffcf4a;animation:blink .8s infinite alternate}
+.m5 .lights i:nth-child(2n){animation-delay:.4s}
+@keyframes blink{to{opacity:.2}}
+.m5 .streak{position:absolute;bottom:16px;inset-inline:14px;display:flex;justify-content:space-between;color:#fff;font-weight:900}
+
+/* ---------- matrix / scoreboard ---------- */
+.tablewrap{overflow-x:auto;border-radius:18px;border:1px solid var(--line)}
+table.matrix{width:100%;border-collapse:collapse;min-width:720px;background:var(--card)}
+.matrix th,.matrix td{padding:12px 14px;text-align:center;border-bottom:1px solid var(--line)}
+.matrix th{background:var(--card2);font-family:"Secular One";font-weight:400}
+.matrix td:first-child,.matrix th:first-child{text-align:right}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%}
+.d3{background:var(--mint);box-shadow:0 0 10px var(--mint)}.d2{background:var(--gold)}.d1{background:rgba(255,255,255,.2)}
+
+/* persistence diagram */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;justify-content:center}
+.node{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;width:200px;text-align:center}
+.node .emoji{margin-inline:auto}
+.arrow{align-self:center;font-size:1.8rem;color:var(--gold);padding:0 8px}
+pre.code{background:#070a1c;border:1px solid var(--line);border-radius:14px;padding:16px;overflow:auto;direction:ltr;text-align:left;font:13px/1.55 ui-monospace,Menlo,monospace;color:#cfe3ff}
+.code .k{color:var(--pink)}.code .s{color:var(--mint)}.code .c{color:#6b75a8}
+
+/* sound lab */
+.soundlab{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.sbtn{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;color:var(--ink);font:600 1rem Rubik;cursor:pointer;text-align:right;display:flex;gap:10px;align-items:center;transition:transform .1s,border-color .2s}
+.sbtn:hover{border-color:var(--gold);transform:translateY(-2px)}
+.sbtn .emoji{margin:0;font-size:1.7rem}
+.sbtn small{display:block;color:var(--muted);font-weight:400;font-size:.8rem}
+
+/* roadmap */
+.road{position:relative;padding-inline-start:34px}
+.road::before{content:"";position:absolute;right:12px;top:6px;bottom:6px;width:3px;background:linear-gradient(var(--mint),var(--gold),var(--coral));border-radius:3px}
+.step{position:relative;margin-bottom:18px}
+.step::before{content:"";position:absolute;right:-30px;top:22px;width:17px;height:17px;border-radius:50%;background:var(--bg);border:3px solid var(--gold)}
+.step .when{font:400 1rem "Secular One";color:var(--gold)}
+
+/* vote */
+.vote{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.vbtn{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px 10px;cursor:pointer;color:var(--ink);font:600 .95rem Rubik;text-align:center;transition:.2s}
+.vbtn .emoji{margin:0 auto 6px}
+.vbtn.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,var(--card));transform:translateY(-4px);box-shadow:0 10px 30px color-mix(in srgb,var(--c) 40%,transparent)}
+.vstatus{margin-top:14px;color:var(--muted)}
+
+.rec{background:linear-gradient(135deg,rgba(62,232,181,.14),rgba(180,140,255,.14));border:1px solid rgba(62,232,181,.4);border-radius:30px;padding:30px}
+.rec h3{font-size:1.6rem;color:var(--mint)}
+
+footer{padding:40px 0 70px;text-align:center;color:var(--muted);font-size:.9rem}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--card2);border:1px solid var(--gold);padding:12px 20px;border-radius:14px;transition:transform .35s cubic-bezier(.2,.8,.2,1);z-index:50;max-width:calc(100% - 32px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+nav.toc{position:sticky;top:0;z-index:20;background:rgba(11,16,38,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+nav.toc a{white-space:nowrap;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:10px;font-weight:600;font-size:.92rem}
+nav.toc a:hover{background:var(--card);color:var(--ink)}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+.reveal.in{opacity:1;transform:none}
+
+@media (max-width:960px){
+  .hero-grid,.idea-body{grid-template-columns:1fr}
+  .g3,.g4,.g5{grid-template-columns:repeat(2,1fr)}
+  .vote{grid-template-columns:repeat(3,1fr)}
+  .globe-stage{max-width:300px}
+}
+@media (max-width:600px){
+  .wrap{padding:0 16px}
+  .g2,.g3,.g4,.g5{grid-template-columns:1fr}
+  .vote{grid-template-columns:repeat(2,1fr)}
+  .idea{padding:22px 16px;border-radius:22px}
+  .meters{grid-template-columns:1fr}
+  .cd{width:68px}
+  section{padding:52px 0}
+  .arrow{transform:rotate(-90deg)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">🎒 תוכנית אתר · האקדמיה של רוני · מבחן #1</span>
+      <h1>מסע אל עולם המפות</h1>
+      <p class="sub">5 רעיונות לאתר משחק בעברית, עם קולות, אנימציות ושמירת התקדמות, שיעזור לרוני (בת 10) להגיע למבחן בגאוגרפיה מוכנה, בביטחון, ועם חיוך.</p>
+      <div class="pill-row">
+        <span class="pill">📖 פרק 1, עמ' 6–23</span>
+        <span class="pill">📚 האטלס, עמ' 148–149</span>
+        <span class="pill">🔊 קריינות וצלילים בעברית</span>
+        <span class="pill">💾 התקדמות נשמרת</span>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a class="btn" href="#ideas">🚀 ל־5 הרעיונות</a>
+        <button class="btn ghost" id="heroSpeak">🔊 שמעו את המדריכה</button>
+      </div>
+      <div class="countdown" id="cd" aria-live="polite">
+        <div class="cd"><b id="cdD">0</b><span>ימים</span></div>
+        <div class="cd"><b id="cdH">0</b><span>שעות</span></div>
+        <div class="cd"><b id="cdM">0</b><span>דקות</span></div>
+        <div class="cd"><b id="cdS">0</b><span>שניות</span></div>
+      </div>
+      <div class="cd-label">⏰ עד המבחן: יום חמישי 12/11, ב־08:00 (שעה משוערת)</div>
+    </div>
+    <div class="globe-stage" aria-hidden="true">
+      <div class="orbit"><span class="sat">🛰️</span></div>
+      <div class="orbit o2"><span class="sat">✈️</span></div>
+      <div class="globe"></div>
+      <span class="float" style="top:2%;right:4%">🧭</span>
+      <span class="float" style="bottom:6%;left:0;animation-delay:1s">📜</span>
+      <span class="float" style="top:40%;left:-4%;animation-delay:2s">🗺️</span>
+      <span class="float" style="bottom:2%;right:12%;animation-delay:1.5s">⭐</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#topics">🎯 נושאי המבחן</a>
+  <a href="#bank">🧠 מאגר הידע</a>
+  <a href="#ideas">💡 5 רעיונות</a>
+  <a href="#matrix">📊 השוואה</a>
+  <a href="#sound">🔊 מעבדת צלילים</a>
+  <a href="#save">💾 שמירת התקדמות</a>
+  <a href="#repo">🏗️ מבנה הריפו</a>
+  <a href="#road">🗓️ לוח זמנים</a>
+  <a href="#vote">🗳️ בחירה</a>
+</div></nav>
+
+<!-- ================= TOPICS ================= -->
+<section id="topics"><div class="wrap">
+  <span class="eyebrow">מה צריך לדעת</span>
+  <h2 class="h2">4 נושאים למבחן</h2>
+  <p class="lead">לפי ההודעה מהמורה ולפי 20 עמודי החומר שסרקתם: עמודי הספר, דף המושגים ושני דפי עבודה מהכיתה.</p>
+  <div class="grid g4" style="margin-top:26px">
+    <div class="card topic reveal" style="--c:var(--gold)"><span class="num">1</span><span class="emoji">📚</span><h3>האטלס</h3><p>חלקי האטלס והשימוש בו: תוכן העניינים, מפתח השמות, מקרא, קנה מידה.</p><span class="tag">עמ' 148–149</span></div>
+    <div class="card topic reveal" style="--c:var(--mint)"><span class="num">2</span><span class="emoji">🧭</span><h3>שימושי המפה</h3><p>איפה נמצאים מקומות, הפקת מידע בנושאים שונים, ניווט.</p><span class="tag">עמ' 6–11</span></div>
+    <div class="card topic reveal" style="--c:var(--coral)"><span class="num">3</span><span class="emoji">📜</span><h3>מפות עתיקות מול מפות של ימינו</h3><p>תלמי, תקופת הגילויים, הדפוס, מפת התלתן, מגלי עולם.</p><span class="tag">עמ' 12–17</span></div>
+    <div class="card topic reveal" style="--c:var(--sky)"><span class="num">4</span><span class="emoji">🛩️</span><h3>שלבי הכנת מפה</h3><p>5 השלבים במרכז למיפוי ישראל, תצלום אוויר ותמונת לוויין.</p><span class="tag">עמ' 18–23</span></div>
+  </div>
+</div></section>
+
+<!-- ================= CONTENT BANK ================= -->
+<section id="bank" class="bank"><div class="wrap">
+  <span class="eyebrow">שאבתי מהחומר</span>
+  <h2 class="h2">מאגר הידע שכל המשחקים יתבססו עליו</h2>
+  <p class="lead">כל 5 הרעיונות משתמשים באותו מאגר שאלות (קובץ JSON אחד). כך התוכן נכתב פעם אחת, ואפשר להחליף "עטיפת משחק" בלי לכתוב אותו מחדש.</p>
+  <div style="margin-top:24px">
+    <details open>
+      <summary>🧭 שימושי המפה</summary>
+      <div class="body">
+        <p><b>מפה</b>: רישום גרפי של מקום או אזור, שמציג בהקטנה צורות נוף טבעיות (הר, נחל, עץ) וצורות נוף שעשה האדם (כביש, בית, אזור תעשייה), באמצעות סימנים גרפיים מוסכמים.</p>
+        <div class="facts">
+          <div class="fact">📍 <b>לדעת איפה נמצאים מקומות</b>: באיזו יבשת, ליד איזה ים, מי המדינות השכנות. הדוגמה בספר: הים התיכון, שמוקף בשלוש יבשות.</div>
+          <div class="fact">📊 <b>להפיק מידע בנושאים שונים</b>: מטיילים מתכננים מסלול, חברה מסחרית מחפשת מקום לקניון, וזואולוג עוקב אחרי נדידת החסידות.</div>
+          <div class="fact">🧭 <b>לנווט</b>: מבררים איפה עומדים לפי פרט נוף בולט (גבעה, נחל, עץ), מוצאים אותו במפה, ואז מתכננים מסלול. מילות הכיוון: ישר, שמאלה, ימינה.</div>
+          <div class="fact">❄️ <b>סביבות שקשה לנווט בהן</b>: אוויר, ים ואזורים מכוסי קרח, כי אין בהם פרט נוף בולט. טייסים נעזרים במפות אוויריות.</div>
+          <div class="fact">🦒 <b>מפה מול טקסט</b> (גן החיות בספארי): יש מידע שמופיע רק במפה (איפה), יש מידע שמופיע רק בטקסט, ויש מידע שמופיע בשניהם.</div>
+          <div class="fact">🏪 <b>חנות המפות של רון</b>: לכל לקוח מתאימה מפה אחרת. ערן צריך מפת דרכים, איה צריכה מפת יישובים, ורונית צריכה מפת אקלים.</div>
+        </div>
+      </div>
+    </details>
+    <details>
+      <summary>📜 מפות עתיקות מול מפות של ימינו</summary>
+      <div class="body">
+        <table class="compare">
+          <tr><th></th><th>📜 מפה עתיקה</th><th>🛰️ מפה של ימינו</th></tr>
+          <tr><td><b>הגדרה</b></td><td>מפה שהוכנה לפני 200 שנה ויותר</td><td>מפה שהוכנה בתקופה שלנו</td></tr>
+          <tr><td><b>דיוק</b></td><td>לא מדויקת: לא היו מכשירי מדידה משוכללים, ולפעמים צוירה לפי סיפורי נוסעים מוגזמים</td><td>מדויקת מאוד: מכשירי מדידה, תצלומי אוויר ולוויינים</td></tr>
+          <tr><td><b>מראה</b></td><td>צבעונית, יפה ומלאה קישוטים (מפלצות ים, ספינות)</td><td>פחות "יפה", ברורה, בצורה קבועה (ריבוע או מלבן)</td></tr>
+          <tr><td><b>חומרים</b></td><td>עור של חיות, בד, חרס, עצים ואבן. ציור ביד</td><td>נייר, מחשב, טלפון, GPS</td></tr>
+          <tr><td><b>ידע על העולם</b></td><td>הכירו רק את הסביבה הקרובה או חלק מהעולם</td><td>כמעט כל העולם ממופה</td></tr>
+        </table>
+        <div class="facts" style="margin-top:14px">
+          <div class="fact">🏛️ <b>קרטוגרפיה</b> = המקצוע של הכנת מפות. <b>קרטו</b> = מפה, <b>גרף</b> = תיאור או רישום (ביוונית). בעברית: <b>מַפָּאוּת</b>. הקרטוגרפים הראשונים היו יוונים.</div>
+          <div class="fact">👴 <b>תלמי</b>: גאוגרף יווני שחי לפני כ־1,900 שנה. הוא הכין את ספר המפות (האטלס) הראשון. אף מפה שלו לא נשארה, ואנחנו יודעים עליהן מספרים עתיקים שתיארו אותן.</div>
+          <div class="fact">🐴 <b>יבשת אסיה בצורת פגסוס</b>: הסוס המעופף מהמיתולוגיה היוונית. מפה יפה, אבל אי אפשר לנווט איתה.</div>
+          <div class="fact">⛵ <b>תקופת הגילויים וההמצאות</b>: לפני כ־500 שנה (המאה ה־15). נוסעים הגיעו כמעט לכל פינה בעולם, ומכשירי המדידה וכלי השיט השתכללו.</div>
+          <div class="fact">🖨️ <b>הדפוס</b>: הומצא בשנת 1452 על ידי יוהנס גוטנברג מגרמניה. אפשר היה להדפיס הרבה מפות בבת אחת, הן הפכו לזולות יותר, והידע הגיע להרבה אנשים.</div>
+          <div class="fact">🌍 <b>מפת עולם מלפני כ־450 שנה</b>: אמריקה מופיעה כחלק מהודו, ועדיין אין בה אוסטרליה ואנטארקטיקה.</div>
+          <div class="fact">🍀 <b>מפת התלתן</b> (לפני 400 שנה): ירושלים במרכז, ואסיה, אירופה ואפריקה סביבה כמו עלי תלתן. אמריקה דחוקה בפינה.</div>
+          <div class="fact">✡️ <b>מפת אברהם בן יעקב</b>: קישטה הגדה של פסח לפני כ־300 שנה. רואים בה את חלוקת הארץ ל־12 השבטים, וקו אדום מסמן את מסלול יציאת מצרים.</div>
+          <div class="fact">🧭 <b>מגלי עולם</b>: מרקו פולו (1271, אל סין), כריסטופר קולומבוס (1492, אל אמריקה, איי בהאמה), וסקו דה גאמה (1497, מסביב לאפריקה דרך כף התקווה הטובה אל הודו).</div>
+        </div>
+      </div>
+    </details>
+    <details>
+      <summary>🛩️ שלבי הכנת מפה (המרכז למיפוי ישראל)</summary>
+      <div class="body">
+        <div class="stages">
+          <div class="stage"><b>איסוף מידע בתצלומי אוויר</b><br>מטוס עם מצלמה אוטומטית מצלם את השטח כל כמה שניות. עד לפני כ־90 שנה המודדים יצאו לשטח ברגל או רכובים על חמורים.</div>
+          <div class="stage"><b>פענוח תצלומי האוויר</b><br>מזהים בתצלומים את פרטי הנוף בעזרת תוכנת מחשב, וממיינים אותם לקבוצות.</div>
+          <div class="stage"><b>סימון פרטי הנוף במפה</b><br>בוחרים רק את מה שצריך, כדי שהמפה תהיה ברורה: לא יותר מדי פרטים, ולא פחות מדי.</div>
+          <div class="stage"><b>עיצוב המפה</b><br>בתוכנת מחשב בוחרים צבעים, צורות, כותרת, סוג אותיות וגודל אותיות.</div>
+          <div class="stage"><b>מפה חדשה נולדת</b><br>מדפיסים את המפה בהרבה עותקים, או מפרסמים אותה באינטרנט, בטלפון ובמכשירי GPS.</div>
+        </div>
+        <div class="facts" style="margin-top:14px">
+          <div class="fact">✈️ <b>תצלום אוויר (תצ"א)</b>: צילום של פני הקרקע מגובה, בדרך כלל ממטוס.</div>
+          <div class="fact">🛰️ <b>תמונת לוויין</b>: הלוויין לא משתמש במצלמה. הוא קולט אותות מפרטי הנוף, ותוכנת מחשב הופכת אותם לכתמי צבע.</div>
+          <div class="fact">☀️ <b>מתי מצלמים תצ"א?</b> ביום בהיר, בשמיים בלי עננים ובאור טוב, אבל לא חזק מדי ולא מסנוור.</div>
+        </div>
+      </div>
+    </details>
+    <details>
+      <summary>📚 האטלס</summary>
+      <div class="body">
+        <div class="facts">
+          <div class="fact">📕 <b>אטלס</b>: ספר שכולו מפות. תלמי הכין את הראשון.</div>
+          <div class="fact">📑 <b>תוכן העניינים</b>: רשימת המפות לפי הסדר שבו הן מופיעות, ולצידן מספרי העמודים. עוזר למצוא מפה מהר.</div>
+          <div class="fact">🔤 <b>מפתח השמות</b>: שמות מקומות לפי סדר הא"ב, ולצד כל שם העמוד והמשבצת שבה הוא נמצא.</div>
+          <div class="fact">🗝️ <b>מקרא</b>: מסביר מה פירוש כל צבע וכל סימן במפה.</div>
+          <div class="fact">📏 <b>קנה מידה</b>: כמה מרחק אמיתי מייצג ס"מ אחד במפה. למשל: 1 ס"מ במפה = 250 ק"מ בשטח.</div>
+        </div>
+        <div class="warn">⚠️ <b>חסר:</b> עמודים 148–149 בספר (חלקי האטלס) לא נמצאים ב־PDF. כדי שהתוכן יתאים בדיוק למה שנלמד בכיתה, כדאי לצלם אותם. בינתיים המאגר מבוסס על דפי העבודה (תוכן עניינים ומפתח שמות) ועל המקרא וקנה המידה שמופיעים במפות בספר.</div>
+      </div>
+    </details>
+  </div>
+</div></section>
+
+<!-- ================= IDEAS ================= -->
+<section id="ideas"><div class="wrap">
+  <span class="eyebrow">הלב של התוכנית</span>
+  <h2 class="h2">5 רעיונות לאתר</h2>
+  <p class="lead">כל רעיון כולל קונספט, מיני־משחקים שממופים לנושאי המבחן, עיצוב סאונד, שמירת התקדמות וטכנולוגיה. לחצו על הלשוניות, ונסו את כפתור "🔊 הדגמה".</p>
+
+  <!-- IDEA 1 -->
+  <article class="idea reveal" style="--c:var(--mint)" data-idea="1">
+    <div class="idea-head"><span class="idea-num">01</span><div><h3 class="idea-title">🏝️ ארכיפלג המפות</h3><div class="idea-tagline">מסע הרפתקאות על מפת איים, בסגנון Candy Crush</div></div></div>
+    <div class="idea-body">
+      <div>
+        <div class="tabs" role="tablist"></div>
+        <div class="panel on" data-t="💡 הקונספט">
+          <p>רוני היא <b>קרטוגרפית צעירה</b> שמפליגה בסירה בין 5 איים. כל אי הוא נושא מהמבחן, ובכל אי יש מסלול של 6 עד 8 שלבים קצרים (2–3 דקות כל אחד). שלב שהיא מסיימת מקבל עד 3 כוכבים ומשאיר אחריו שביל זוהר. בסוף כל אי מחכה <b>"אתגר הקפטן"</b>: מבחן קטן שפותח את האי הבא.</p>
+          <ul>
+            <li><b>אי האטלס 📚</b>: מוצאים מקום במפתח השמות לפי עמוד ומשבצת, ומשתמשים במקרא.</li>
+            <li><b>אי השימושים 🧭</b>: עוזרים לטיילת, לזואולוג ולחברת הקניון לבחור את המפה הנכונה.</li>
+            <li><b>אי הזמן 📜</b>: עתיקה או חדשה? ממיינים מאפיינים לשתי תיבות.</li>
+            <li><b>אי המפעל 🛩️</b>: מסדרים את 5 השלבים בגרירה.</li>
+            <li><b>אי המושגים ⭐</b>: משחק זיכרון שמתאים מושג להגדרה (כמו דף העבודה).</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🎮 מכניקות">
+          <ul>
+            <li><b>8 סוגי תרגיל</b>: שאלה אמריקאית, נכון/לא נכון, גרירה לסדר, מיון לשתי תיבות, התאמת זוגות, השלמת מילה, לחיצה על נקודה במפה, ושאלה פתוחה עם תשובה לדוגמה.</li>
+            <li><b>כוכבים ומטבעות</b>: מטבעות קונים לסירה תחפושות וצבעים (כובע קפטן, מפרש של יוניקורן 🦄).</li>
+            <li><b>חזרה מרווחת (לייטנר)</b>: שאלה שרוני טעתה בה חוזרת למחרת. שאלה שהיא יודעת חוזרת רק אחרי כמה ימים.</li>
+            <li><b>"ים הטעויות"</b>: אי בונוס שמרכז רק את השאלות שרוני טעתה בהן.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🔊 סאונד">
+          <ul>
+            <li><b>מדריכה קוראת בקול</b> כל שאלה, עם כפתור 🔊 לשמיעה חוזרת. זה עוזר גם בקריאה וגם בריכוז.</li>
+            <li><b>משוב קולי מגוון</b>: "וואו, מדויק כמו מפה של ימינו!", "כמעט! גם תלמי טעה לפעמים 😉".</li>
+            <li>צלילי ים, גלים ושחפים ברקע, "פּוֹפּ" כשנפתח כוכב, ותזמורת קטנה בסוף כל אי.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="💾 שמירה">
+          <ul>
+            <li>כוכבים לכל שלב, מטבעות, תחפושות, ומצב לייטנר לכל שאלה. הכול נשמר ב־localStorage.</li>
+            <li>שמירה אוטומטית אחרי כל תשובה, כך שסגירת הדפדפן באמצע שלב לא מוחקת כלום.</li>
+            <li>"מפת התקדמות" ויזואלית: רואים בדיוק כמה מכל אי כבר נכבש.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="⚖️ יתרונות/חסרונות">
+          <ul>
+            <li>✅ מבנה מוכר וממכר לילדים. התקדמות ברורה. מכסה את כל הנושאים בצורה מסודרת.</li>
+            <li>✅ קל להוסיף אחר כך "ארכיפלגים" למקצועות אחרים.</li>
+            <li>⚠️ סיפור פחות עמוק מחדר בריחה. צריך הרבה שאלות כדי למלא 35 שלבים.</li>
+          </ul>
+        </div>
+        <div class="meters"></div>
+        <div class="idea-actions"><button class="btn sm demo" data-say="ברוכה הבאה לארכיפלג המפות, רוני! הסירה שלך מוכנה. בואי נפליג אל אי האטלס.">🔊 הדגמה</button><button class="btn ghost sm sfx" data-sfx="star">⭐ צליל כוכב</button></div>
+      </div>
+      <div class="phone"><div class="screen m1">
+        <div class="hud"><span>⭐ 23</span><span>🪙 140</span><span>🔥 4</span></div>
+        <svg viewBox="0 0 276 520" preserveAspectRatio="none"><path d="M200 470 C 60 430, 60 360, 150 330 S 240 230, 120 200 S 40 110, 150 80" stroke="#fff" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round" fill="none" opacity=".8"/></svg>
+        <div class="isl" style="bottom:28px;right:40px">📚<small>⭐⭐⭐ האטלס</small></div>
+        <div class="isl" style="bottom:150px;right:150px">🧭<small>⭐⭐ שימושים</small></div>
+        <div class="isl" style="top:255px;right:60px">📜<small>⭐ הזמן</small></div>
+        <div class="isl" style="top:170px;right:170px;filter:grayscale(.7)">🛩️<small>🔒 המפעל</small></div>
+        <div class="isl" style="top:70px;right:80px;filter:grayscale(.7)">⭐<small>🔒 מושגים</small></div>
+        <div class="me" style="top:255px;right:120px">⛵</div>
+      </div></div>
+    </div>
+  </article>
+
+  <!-- IDEA 2 -->
+  <article class="idea reveal" style="--c:var(--gold)" data-idea="2">
+    <div class="idea-head"><span class="idea-num">02</span><div><h3 class="idea-title">🗝️ חדר הבריחה: סוד המפה העתיקה</h3><div class="idea-tagline">רוני ננעלה בספרייה של תלמי, ורק הידע שלה יפתח את התיבה</div></div></div>
+    <div class="idea-body">
+      <div>
+        <div class="tabs" role="tablist"></div>
+        <div class="panel on" data-t="💡 הקונספט">
+          <p>סיפור מסגרת דרמטי: קרטוגרף מסתורי השאיר <b>תיבת אוצר עם 5 מנעולים</b>. כל מנעול הוא חידה על נושא אחר מהמבחן. כל מנעול שנפתח חושף קטע ממפה עתיקה קרועה, ובסוף המפה מתחברת ומובילה לאוצר: <b>תעודת "קרטוגרפית מוסמכת"</b> עם השם של רוני.</p>
+          <ul>
+            <li><b>🔐 מנעול האטלס</b>: קוד של 3 ספרות שמסתתר בתוכן העניינים ובמפתח השמות של "אטלס" מזויף.</li>
+            <li><b>🔐 מנעול הניווט</b>: מפת הדרך למטמון מהספר (העץ, בור המים, החורבה, גל האבנים, הנחל). מכוונים דמות במילים "ישר, ימינה, שמאלה".</li>
+            <li><b>🔐 מנעול הזמן</b>: מסדרים על ציר זמן את תלמי, מרקו פולו, הדפוס, קולומבוס ואת תמונת הלוויין.</li>
+            <li><b>🔐 מנעול המפעל</b>: 5 גלגלי שיניים, כל אחד שלב בהכנת מפה, ומסדרים אותם בסדר הנכון.</li>
+            <li><b>🔐 מנעול הזכוכית המגדלת</b>: מוצאים 5 "טעויות" במפת עולם עתיקה (אמריקה כחלק מהודו, חסרה אוסטרליה...).</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🎮 מכניקות">
+          <ul>
+            <li><b>רמזים בתשלום</b>: על כל מנעול יש 3 רמזים שמפנים לעמוד בספר ("הציצי בעמ' 18 🙂"), כך שהמשחק גם מלמד לחפש בספר.</li>
+            <li><b>מפת פאזל</b>: כל מנעול שנפתח מוסיף חתיכה למפת האוצר, עם אנימציה של נייר קלף נפתח.</li>
+            <li><b>מצב "שוב, בחידות חדשות"</b>: החידות נבנות אקראית מהמאגר, כך שאפשר לשחק שוב ושוב.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🔊 סאונד">
+          <ul>
+            <li>מוזיקת מסתורין שקטה, חריקת דלת, ו"קליק־קלאנק" של מנעול שנפתח.</li>
+            <li>קול של "רוח הקרטוגרף" שמקריא חידות בטון מסתורי וחמוד (קריינות בעברית).</li>
+            <li>פיצוץ אור וזיקוקים כשהתיבה נפתחת 🎆.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="💾 שמירה">
+          <ul>
+            <li>אילו מנעולים נפתחו, כמה רמזים נוצלו, והזמן הכי טוב לכל מנעול.</li>
+            <li>"יומן חוקרת": כל עובדה שנחשפה נכנסת ליומן, ואפשר לקרוא אותו שוב לפני המבחן.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="⚖️ יתרונות/חסרונות">
+          <ul>
+            <li>✅ גורם ה־WOW הכי גבוה. סיפור שסוחף. משלב חיפוש בספר, שזה בדיוק מה שהמורה ביקשה.</li>
+            <li>⚠️ פחות מתאים לחזרה מהירה רגע לפני המבחן. דורש הכי הרבה עבודת עיצוב.</li>
+          </ul>
+        </div>
+        <div class="meters"></div>
+        <div class="idea-actions"><button class="btn sm demo" data-say="שלום רוני. אני רוח הקרטוגרף. כדי לפתוח את התיבה, עלייך לפתור חמש חידות. האם את מוכנה?">🔊 הדגמה</button><button class="btn ghost sm sfx" data-sfx="unlock">🔓 צליל מנעול</button></div>
+      </div>
+      <div class="phone"><div class="screen m2">
+        <div class="tt">ספריית תלמי · 3/5</div>
+        <span class="torch" style="right:18px">🔥</span><span class="torch" style="left:18px">🔥</span>
+        <div class="chest">🧰</div>
+        <div class="locks"><span class="lock ok">📚</span><span class="lock ok">🧭</span><span class="lock ok">⏳</span><span class="lock">🔒</span><span class="lock">🔒</span></div>
+        <div style="position:absolute;bottom:20px;inset-inline:14px;background:var(--parch);color:var(--parch-ink);border-radius:12px;padding:8px;font-weight:600;text-align:center">"סדרי את גלגלי השיניים מהשלב הראשון לחמישי…"</div>
+      </div></div>
+    </div>
+  </article>
+
+  <!-- IDEA 3 -->
+  <article class="idea reveal" style="--c:var(--violet)" data-idea="3">
+    <div class="idea-head"><span class="idea-num">03</span><div><h3 class="idea-title">⏳ מכונת הזמן של המפות</h3><div class="idea-tagline">קופצים בין תקופות ופוגשים את מי שציירו את העולם</div></div></div>
+    <div class="idea-body">
+      <div>
+        <div class="tabs" role="tablist"></div>
+        <div class="panel on" data-t="💡 הקונספט">
+          <p>רוני נכנסת ל<b>מכונת זמן</b> עם ציר שנים. בכל עצירה היא פוגשת דמות מהתקופה, שמספרת על עצמה בקול, ואז נותנת לה משימה. בכל עצירה רוני אוספת <b>"חפץ"</b> לתצוגת מוזיאון אישית.</p>
+          <ul>
+            <li><b>🪨 ימי קדם</b>: ציור מפה על עור ועל חרס. רק הסביבה הקרובה.</li>
+            <li><b>🏛️ יוון, לפני 1,900 שנה</b>: תלמי, האטלס הראשון, ומשחק מילים על קרטו + גרף.</li>
+            <li><b>⛵ 1271–1497</b>: מפליגים עם מרקו פולו, קולומבוס ודה גאמה על מפת עולם, ומשרטטים את המסלול.</li>
+            <li><b>🖨️ 1452</b>: הסדנה של גוטנברג. מדפיסים 100 מפות בלחיצה, לעומת מפה אחת ביד.</li>
+            <li><b>🛰️ היום</b>: המרכז למיפוי ישראל, תצ"א, לוויין, GPS.</li>
+            <li><b>🔀 "מראה הזמן"</b>: בכל תקופה משווים מפה עתיקה למפה חדשה, זו לצד זו.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🎮 מכניקות">
+          <ul>
+            <li><b>שיחות עם בחירות</b>: הדמות שואלת שאלה, ורוני בוחרת תשובה כמו בהרפתקת דיאלוג.</li>
+            <li><b>"מצא את ההבדלים"</b>: מפת עולם מלפני 450 שנה מול מפת עולם של היום.</li>
+            <li><b>מוזיאון</b>: כל חפץ שנאסף (קלף, מצפן, גלובוס, מכבש דפוס, לוויין) מוצג בוויטרינה, ולחיצה עליו מקריאה את העובדה.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🔊 סאונד">
+          <ul>
+            <li>אפקט "ווּוּוּש" של קפיצה בזמן, ומוזיקה שמשתנה בין התקופות.</li>
+            <li>כל דמות "מדברת" בקול אחר (גובה ומהירות שונים של הקריינות).</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="💾 שמירה">
+          <ul>
+            <li>אילו תקופות בוקרו, אילו חפצים נאספו, ואחוז הצלחה לכל תקופה.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="⚖️ יתרונות/חסרונות">
+          <ul>
+            <li>✅ מצוין לנושא 3 (עתיקות מול ימינו), שהוא הלב של הפרק. סיפור חזק שקל לזכור.</li>
+            <li>⚠️ האטלס ושימושי המפה פחות טבעיים בתוך ציר זמן, וצריך "תחנה צדדית" בשבילם.</li>
+          </ul>
+        </div>
+        <div class="meters"></div>
+        <div class="idea-actions"><button class="btn sm demo" data-say="שלום! אני תלמי, גאוגרף יווני. חייתי לפני אלף תשע מאות שנה, והכנתי את ספר המפות הראשון.">🔊 הדגמה</button><button class="btn ghost sm sfx" data-sfx="warp">🌀 צליל קפיצה בזמן</button></div>
+      </div>
+      <div class="phone"><div class="screen m3">
+        <div class="tl"></div>
+        <div class="ev" style="top:70px">🪨</div><div class="lbl" style="top:82px;left:14px">ימי קדם</div>
+        <div class="ev" style="top:140px">🏛️</div><div class="lbl" style="top:152px;right:14px;text-align:right">תלמי · לפני 1,900 שנה</div>
+        <div class="ev" style="top:210px">⛵</div><div class="lbl" style="top:222px;left:14px">מגלי עולם 1271–1497</div>
+        <div class="ev" style="top:280px">🖨️</div><div class="lbl" style="top:292px;right:14px;text-align:right">הדפוס · 1452</div>
+        <div class="ev" style="top:350px;border-color:#5cc8ff;box-shadow:0 0 18px #5cc8ff">🛰️</div><div class="lbl" style="top:362px;left:14px">היום</div>
+        <div class="portal">🌀 קפצי ל־1452!</div>
+      </div></div>
+    </div>
+  </article>
+
+  <!-- IDEA 4 -->
+  <article class="idea reveal" style="--c:var(--sky)" data-idea="4">
+    <div class="idea-head"><span class="idea-num">04</span><div><h3 class="idea-title">🏭 מפעל המפות של רוני</h3><div class="idea-tagline">משחק ניהול: מטיסים מטוס, מפענחים, מעצבים ומוכרים מפות</div></div></div>
+    <div class="idea-body">
+      <div>
+        <div class="tabs" role="tablist"></div>
+        <div class="panel on" data-t="💡 הקונספט">
+          <p>רוני מנהלת את <b>"המרכז למיפוי של רוני"</b>. לקוחות נכנסים לחנות (בדיוק כמו בחנות של רון בספר) ומבקשים מפה למטרה מסוימת. כדי לייצר כל מפה רוני עוברת את <b>5 שלבי ההכנה</b> כמיני־משחקים, ומרוויחה מטבעות שבעזרתם היא משדרגת את המפעל.</p>
+          <ul>
+            <li><b>✈️ שלב 1</b>: מטיסים מטוס מעל העיר ומצלמים ברגע הנכון (ורק כשאין עננים!).</li>
+            <li><b>🔍 שלב 2</b>: מפענחים: לוחצים על בניינים, פארקים, רחוב ראשי ורחוב משני בתצלום.</li>
+            <li><b>✏️ שלב 3</b>: מסמנים: בוחרים אילו פרטים להכניס למפת תחבורה, ומה להשאיר בחוץ.</li>
+            <li><b>🎨 שלב 4</b>: מעצבים: צבעים, כותרת ומקרא.</li>
+            <li><b>🖨️ שלב 5</b>: מדפיסים או מעלים לאינטרנט, והלקוח מרוצה!</li>
+            <li><b>🛒 החנות</b>: "אני רוצה לדעת מה הדרך הקצרה לירושלים", ורוני בוחרת את המפה המתאימה (שימושי המפה).</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🎮 מכניקות">
+          <ul>
+            <li><b>שדרוגים</b>: מחליפים חמור במטוס, ומטוס בלוויין. כל שדרוג מלמד עובדה ("פעם המודדים רכבו על חמורים!").</li>
+            <li><b>מדד שביעות רצון</b> של לקוחות. טעות = לקוח עצוב 😢 שחוזר מחר.</li>
+            <li><b>דוכן אטלסים</b>: לקוח שואל "איפה קפריסין?", ורוני מחפשת במפתח השמות.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🔊 סאונד">
+          <ul>
+            <li>רעש מנוע מטוס, "קליק" של מצלמה, רעש מכונת דפוס, ו"קַּצִ'ינג" של קופה רושמת.</li>
+            <li>לקוחות מדברים בעברית בקולות שונים.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="💾 שמירה">
+          <ul>
+            <li>מטבעות, שדרוגים, מספר מפות שיוצרו, והישגים ("100 לקוחות מרוצים").</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="⚖️ יתרונות/חסרונות">
+          <ul>
+            <li>✅ הלמידה הכי עמוקה של שלבי ההכנה ושל שימושי המפה, דרך עשייה ולא דרך שינון.</li>
+            <li>⚠️ הכי מורכב לבנייה (מיני־משחקים ייחודיים). פחות מכסה מפות עתיקות.</li>
+          </ul>
+        </div>
+        <div class="meters"></div>
+        <div class="idea-actions"><button class="btn sm demo" data-say="שלום, אני ערן. אני רוצה להגיע מקריית שמונה לירושלים בדרך הקצרה ביותר. איזו מפה מתאימה לי?">🔊 הדגמה</button><button class="btn ghost sm sfx" data-sfx="cash">💰 צליל קופה</button></div>
+      </div>
+      <div class="phone"><div class="screen m4">
+        <div class="coins"><span>🪙 320</span><span>😊 12</span></div>
+        <div class="plane">✈️</div>
+        <div class="st" style="right:12px">📸</div><div class="st" style="right:74px">🔍</div><div class="st" style="right:136px">✏️</div><div class="st" style="right:198px">🎨</div>
+        <div class="belt"></div>
+        <div class="cust">🧑‍🦱 "אני רוצה לדעת איפה המקומות הכי חמים בנגב…"<br><span style="color:#1d7bd8">🗺️ מפת אקלים ✔</span></div>
+      </div></div>
+    </div>
+  </article>
+
+  <!-- IDEA 5 -->
+  <article class="idea reveal" style="--c:var(--pink)" data-idea="5">
+    <div class="idea-head"><span class="idea-num">05</span><div><h3 class="idea-title">🎤 רוני שואו: אלופת המפות</h3><div class="idea-tagline">שעשועון טלוויזיה עם מנחה, אורות ובונוסים, וגם סימולציית מבחן אמיתית</div></div></div>
+    <div class="idea-body">
+      <div>
+        <div class="tabs" role="tablist"></div>
+        <div class="panel on" data-t="💡 הקונספט">
+          <p>אולפן טלוויזיה נוצץ. מנחה בקול רם ("ו... זו תשובה נכונה!"), קהל מריע, ו<b>3 מצבי משחק</b>:</p>
+          <ul>
+            <li><b>⚡ סבב בזק</b>: 60 שניות, כמה שיותר תשובות נכונות. רצף תשובות מכפיל את הנקודות.</li>
+            <li><b>🃏 כרטיסיות</b>: מושג בצד אחד והגדרה בצד שני. מסובבים, והכרטיסיות עובדות בשיטת לייטנר.</li>
+            <li><b>📝 מצב מבחן</b>: בדיוק כמו המבחן האמיתי. שאלות פתוחות מדפי העבודה ("ציינו את ההבדלים בין מפה עתיקה למפה בת זמננו"). רוני כותבת תשובה, רואה תשובה לדוגמה, ומסמנת לעצמה ✓ אם כיסתה את הנקודות.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🎮 מכניקות">
+          <ul>
+            <li><b>גלגלי הצלה</b>: 50:50, "שאלי את אבא", ו"הציצי בספר".</li>
+            <li><b>טבלת שיאים אישית</b>: מתחרים בשיא של עצמך מאתמול.</li>
+            <li><b>מילות מפתח</b>: במצב מבחן המערכת מדגישה אם בתשובה הכתובה מופיעות מילות המפתח (למשל "מכשירי מדידה", "מדויקת").</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="🔊 סאונד">
+          <ul>
+            <li>ג'ינגל פתיחה, תיקתוק שעון, תופים לפני תשובה, ומחיאות כפיים.</li>
+            <li>המנחה מקריא כל שאלה, ומכריז "רצף של 5!" בהתלהבות.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="💾 שמירה">
+          <ul>
+            <li>שיאים, מצב הכרטיסיות, תשובות שנכתבו במצב מבחן (כדי שאבא יוכל לקרוא), ואחוז שליטה לכל נושא.</li>
+          </ul>
+        </div>
+        <div class="panel" data-t="⚖️ יתרונות/חסרונות">
+          <ul>
+            <li>✅ הכי מהיר לבנייה. מושלם לחזרה רגע לפני המבחן. רק הוא מתרגל כתיבת תשובות פתוחות.</li>
+            <li>⚠️ פחות "עולם" ופחות סיפור. בלי עטיפה חזקה עלול להרגיש כמו מבחן.</li>
+          </ul>
+        </div>
+        <div class="meters"></div>
+        <div class="idea-actions"><button class="btn sm demo" data-say="ערב טוב וברוכים הבאים לרוני שואו! השאלה הראשונה: מה הומצא בשנת אלף ארבע מאות חמישים ושתיים?">🔊 הדגמה</button><button class="btn ghost sm sfx" data-sfx="fanfare">🎺 צליל ניצחון</button></div>
+      </div>
+      <div class="phone"><div class="screen m5">
+        <div class="lights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="q">מה הומצא בשנת 1452<br>ועזר להפיץ מפות?</div>
+        <div class="ans" style="top:160px;background:#7b3fe4">🧭 המצפן</div>
+        <div class="ans" style="top:205px;background:#1fbf8f;box-shadow:0 0 20px #3ee8b5">🖨️ הדפוס ✔</div>
+        <div class="ans" style="top:250px;background:#7b3fe4">🛰️ הלוויין</div>
+        <div class="ans" style="top:295px;background:#7b3fe4">✈️ המטוס</div>
+        <div class="streak"><span>🔥 רצף 5</span><span>⏱️ 0:42</span><span>🏆 1,250</span></div>
+      </div></div>
+    </div>
+  </article>
+</div></section>
+
+<!-- ================= MATRIX ================= -->
+<section id="matrix"><div class="wrap">
+  <span class="eyebrow">השוואה</span>
+  <h2 class="h2">מי מכסה מה?</h2>
+  <p class="lead">● ירוק = כיסוי מלא, ● צהוב = חלקי, ● אפור = מעט.</p>
+  <div class="tablewrap" style="margin-top:20px">
+    <table class="matrix">
+      <thead><tr><th>נושא / רעיון</th><th>🏝️ ארכיפלג</th><th>🗝️ חדר בריחה</th><th>⏳ מכונת זמן</th><th>🏭 מפעל</th><th>🎤 שואו</th></tr></thead>
+      <tbody>
+        <tr><td>📚 האטלס</td><td><i class="dot d3"></i></td><td><i class="dot d3"></i></td><td><i class="dot d1"></i></td><td><i class="dot d2"></i></td><td><i class="dot d3"></i></td></tr>
+        <tr><td>🧭 שימושי המפה</td><td><i class="dot d3"></i></td><td><i class="dot d2"></i></td><td><i class="dot d1"></i></td><td><i class="dot d3"></i></td><td><i class="dot d3"></i></td></tr>
+        <tr><td>📜 עתיקות מול ימינו</td><td><i class="dot d3"></i></td><td><i class="dot d3"></i></td><td><i class="dot d3"></i></td><td><i class="dot d1"></i></td><td><i class="dot d3"></i></td></tr>
+        <tr><td>🛩️ שלבי הכנה</td><td><i class="dot d3"></i></td><td><i class="dot d2"></i></td><td><i class="dot d2"></i></td><td><i class="dot d3"></i></td><td><i class="dot d3"></i></td></tr>
+        <tr><td>📝 שאלות פתוחות</td><td><i class="dot d2"></i></td><td><i class="dot d1"></i></td><td><i class="dot d1"></i></td><td><i class="dot d1"></i></td><td><i class="dot d3"></i></td></tr>
+        <tr><td>🤩 גורם WOW</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐</td></tr>
+        <tr><td>⏱️ זמן בנייה</td><td>~1 יום</td><td>~1.5 יום</td><td>~1.5 יום</td><td>~2 ימים</td><td>~חצי יום</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- ================= SOUND LAB ================= -->
+<section id="sound"><div class="wrap">
+  <span class="eyebrow">נסו עכשיו</span>
+  <h2 class="h2">🔊 מעבדת הצלילים</h2>
+  <p class="lead">כל הצלילים כאן נוצרים בקוד (Web Audio), בלי קבצים. הקריינות משתמשת בקול העברי שמובנה בדפדפן (Web Speech, he-IL), ובמק ובאייפון הוא בדרך כלל טוב. אפשרות לשדרוג: <b>להקליט את הקול של אבא</b> 🎙️ לכמה משפטי עידוד, וזה כבר WOW אמיתי.</p>
+  <div class="soundlab" style="margin-top:22px">
+    <button class="sbtn sfx" data-sfx="correct"><span class="emoji">✅</span><span>תשובה נכונה<small>שני צלילים עולים</small></span></button>
+    <button class="sbtn sfx" data-sfx="wrong"><span class="emoji">🙈</span><span>כמעט…<small>צליל רך, לא מעליב</small></span></button>
+    <button class="sbtn sfx" data-sfx="star"><span class="emoji">⭐</span><span>כוכב נפתח<small>נצנוץ</small></span></button>
+    <button class="sbtn sfx" data-sfx="fanfare"><span class="emoji">🎺</span><span>סוף שלב<small>תרועת ניצחון</small></span></button>
+    <button class="sbtn sfx" data-sfx="unlock"><span class="emoji">🔓</span><span>מנעול נפתח<small>קליק־קלאנק</small></span></button>
+    <button class="sbtn sfx" data-sfx="warp"><span class="emoji">🌀</span><span>קפיצה בזמן<small>ווּוּוּש</small></span></button>
+    <button class="sbtn demo" data-say="כל הכבוד רוני! את קרטוגרפית אמיתית!"><span class="emoji">🗣️</span><span>עידוד בקול<small>קריינות בעברית</small></span></button>
+    <button class="sbtn demo" data-say="קרטוגרפיה היא המקצוע של הכנת מפות. קַרְטוֹ זה מפה, וגְרָף זה תיאור או רישום."><span class="emoji">📖</span><span>הקראת עובדה<small>קריינות בעברית</small></span></button>
+  </div>
+</div></section>
+
+<!-- ================= PERSISTENCE ================= -->
+<section id="save"><div class="wrap">
+  <span class="eyebrow">שום דבר לא הולך לאיבוד</span>
+  <h2 class="h2">💾 איך נשמרת ההתקדמות</h2>
+  <p class="lead">שלוש שכבות. אפשר להתחיל מהראשונה (עובדת מהיום הראשון) ולהוסיף את האחרות בהמשך.</p>
+  <div class="flow" style="margin-top:26px">
+    <div class="node"><span class="emoji">📱</span><b>שכבה 1: מקומית</b><p style="color:var(--muted);margin:.3em 0;font-size:.92rem">localStorage. שמירה אוטומטית אחרי כל תשובה. עובד גם בלי אינטרנט.</p><span class="tag">MVP ✔</span></div>
+    <div class="arrow">⟵</div>
+    <div class="node"><span class="emoji">🔑</span><b>שכבה 2: קוד גיבוי</b><p style="color:var(--muted);margin:.3em 0;font-size:.92rem">כפתור "גבי אותי" יוצר קוד קצר או QR, וסורקים אותו במכשיר אחר כדי להמשיך משם.</p><span class="tag">שלב 2</span></div>
+    <div class="arrow">⟵</div>
+    <div class="node"><span class="emoji">☁️</span><b>שכבה 3: ענן</b><p style="color:var(--muted);margin:.3em 0;font-size:.92rem">Firebase או Supabase (חינם). סנכרון אוטומטי בין הטאבלט, הטלפון והמחשב, ולוח הורים.</p><span class="tag">אופציונלי</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:26px">
+    <div>
+      <h3 style="margin-bottom:10px">מבנה הנתונים (משותף לכל אתרי האקדמיה)</h3>
+<pre class="code"><span class="c">// localStorage key: "roni-academy:v1"</span>
+{
+  <span class="s">"profile"</span>: { <span class="s">"name"</span>: <span class="s">"רוני"</span>, <span class="s">"avatar"</span>: <span class="s">"🦄"</span>, <span class="s">"coins"</span>: 320 },
+  <span class="s">"subjects"</span>: {
+    <span class="s">"geography-maps"</span>: {
+      <span class="s">"levels"</span>:  { <span class="s">"atlas-1"</span>: { <span class="s">"stars"</span>: 3, <span class="s">"best"</span>: 42 } },
+      <span class="s">"leitner"</span>: { <span class="s">"q017"</span>: { <span class="s">"box"</span>: 3, <span class="s">"due"</span>: <span class="s">"2026-11-11"</span> } },
+      <span class="s">"mastery"</span>: { <span class="s">"atlas"</span>: .8, <span class="s">"uses"</span>: .65, <span class="s">"old-new"</span>: .9, <span class="s">"stages"</span>: 1 },
+      <span class="s">"answers"</span>: [ <span class="c">/* תשובות פתוחות שנכתבו */</span> ]
+    }
+  },
+  <span class="s">"streak"</span>: { <span class="s">"days"</span>: 4, <span class="s">"last"</span>: <span class="s">"2026-11-10"</span> }
+}</pre>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">👨‍👧 לוח הורים</h3>
+      <div class="card">
+        <p>עמוד נפרד (עם קוד הורה פשוט) שמראה:</p>
+        <ul>
+          <li>אחוז שליטה לכל אחד מ־4 הנושאים, כדי לדעת על מה לעשות חזרה יחד.</li>
+          <li>10 השאלות שרוני טועה בהן הכי הרבה.</li>
+          <li>התשובות הפתוחות שהיא כתבה במצב מבחן.</li>
+          <li>זמן תרגול יומי ורצף ימים 🔥.</li>
+        </ul>
+        <p>💡 נבנה כמודול משותף, <code>shared/progress.js</code>, כך שכל מבחן עתידי (חשבון, מדעים, תנ"ך...) מקבל אותו בחינם.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ================= REPO ================= -->
+<section id="repo"><div class="wrap">
+  <span class="eyebrow">ריפו חדש</span>
+  <h2 class="h2">🏗️ האקדמיה של רוני: מבנה הריפו</h2>
+  <p class="lead">ריפו <code>roni-learning</code> חדש בתוך תיקיית Roni, שמתפרסם ב־GitHub Pages. כל מבחן הוא תיקייה, וכל הכלים המשותפים (צלילים, שמירה, עיצוב) יושבים במקום אחד.</p>
+  <div class="grid g2" style="margin-top:22px">
+<pre class="code">roni-learning/
+├── index.html            <span class="c"># 🏠 שער האקדמיה: כל אתרי ההכנה</span>
+├── shared/
+│   ├── sound.js          <span class="c"># 🔊 צלילי Web Audio + קריינות he-IL</span>
+│   ├── progress.js       <span class="c"># 💾 שמירה, לייטנר, גיבוי וייצוא</span>
+│   ├── engine.js         <span class="c"># 🎮 8 סוגי תרגילים לשימוש חוזר</span>
+│   └── theme.css         <span class="c"># 🎨 עיצוב, פונטים, אנימציות</span>
+├── geography-maps/       <span class="c"># 🗺️ המבחן הזה</span>
+│   ├── index.html
+│   ├── content.json      <span class="c"># 🧠 מאגר השאלות</span>
+│   └── assets/
+├── parents/              <span class="c"># 👨‍👧 לוח הורים</span>
+├── plans/
+│   └── geography.html    <span class="c"># 📄 המסמך הזה</span>
+└── README.md</pre>
+    <div class="card">
+      <h3>עקרונות</h3>
+      <ul>
+        <li><b>בלי build</b>: HTML, CSS ו־JS טהורים, כמו מלכת הסקוויישים. פותחים ועובד.</li>
+        <li><b>RTL ומובייל קודם</b>: רוני תשחק בעיקר בטאבלט או בטלפון.</li>
+        <li><b>תוכן נפרד מהמשחק</b>: למבחן הבא כותבים רק <code>content.json</code> חדש.</li>
+        <li><b>PWA</b>: אפשר "להתקין" לדף הבית ולשחק גם בלי אינטרנט.</li>
+        <li><b>חומרי הלימוד הסרוקים לא עולים לריפו הציבורי</b>, כי הם מוגנים בזכויות יוצרים. רק השאלות שכתבנו בעצמנו.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- ================= ROADMAP ================= -->
+<section id="road"><div class="wrap">
+  <span class="eyebrow">המבחן בעוד יומיים!</span>
+  <h2 class="h2">🗓️ לוח זמנים</h2>
+  <p class="lead">היום שלישי 10/11 והמבחן ביום חמישי. לכן הסדר הוא: קודם משהו שימושי מחר, ואחר כך ה־WOW המלא.</p>
+  <div class="road" style="margin-top:24px">
+    <div class="step card"><div class="when">שלישי 10/11, ערב</div><b>MVP: שלד האקדמיה + המנוע + מאגר של כ־80 שאלות</b><p>shared/ (צלילים, שמירה, מנוע), content.json עם כל 4 הנושאים, ומצב "רוני שואו" בסיסי. רוני יכולה להתחיל לתרגל כבר הערב.</p></div>
+    <div class="step card"><div class="when">רביעי 11/11</div><b>עטיפת WOW סביב אותו מנוע</b><p>הרעיון שתבחרו (המלצה: ארכיפלג), עם מצב מבחן לשאלות פתוחות ו"ים הטעויות" לחזרה ממוקדת בערב שלפני המבחן.</p></div>
+    <div class="step card"><div class="when">חמישי 12/11, בוקר</div><b>⚡ סבב בזק של 5 דקות לפני בית הספר</b><p>רק השאלות שבתיבות הלייטנר הנמוכות. בהצלחה רוני! 🍀</p></div>
+    <div class="step card"><div class="when">אחרי המבחן</div><b>הרחבה</b><p>לוח הורים, גיבוי בקוד או QR, סנכרון ענן, ומבחן הבא באקדמיה.</p></div>
+  </div>
+</div></section>
+
+<!-- ================= RECOMMENDATION + VOTE ================= -->
+<section id="vote"><div class="wrap">
+  <div class="rec reveal">
+    <span class="eyebrow">ההמלצה שלי</span>
+    <h3>🏝️ ארכיפלג המפות, עם "רוני שואו" בפנים</h3>
+    <p style="color:var(--ink);font-size:1.08rem">הוא מכסה את כל 4 הנושאים, מוכר לילדים, ונבנה על אותו מנוע תרגילים. מ"רוני שואו" נלקחים <b>מצב מבחן</b> (שאלות פתוחות, כמו בדפי העבודה) ו<b>סבב בזק</b>. את המנעולים של <b>חדר הבריחה</b> אפשר להפוך ל"אתגר הקפטן" בסוף כל אי, וכך מקבלים את ה־WOW בלי לשלם את מחיר הבנייה המלא. הערב בונים את המנוע ואת השואו, ומחר עוטפים בארכיפלג.</p>
+  </div>
+
+  <div style="margin-top:44px">
+    <span class="eyebrow">🗳️ תורכם</span>
+    <h2 class="h2">איזה רעיון רוני הכי אוהבת?</h2>
+    <p class="lead">תנו לרוני לבחור. הבחירה נשמרת בדפדפן, כהדגמה קטנה לשמירת התקדמות.</p>
+    <div class="vote" style="margin-top:20px">
+      <button class="vbtn" style="--c:var(--mint)" data-v="1"><span class="emoji">🏝️</span>ארכיפלג המפות</button>
+      <button class="vbtn" style="--c:var(--gold)" data-v="2"><span class="emoji">🗝️</span>חדר הבריחה</button>
+      <button class="vbtn" style="--c:var(--violet)" data-v="3"><span class="emoji">⏳</span>מכונת הזמן</button>
+      <button class="vbtn" style="--c:var(--sky)" data-v="4"><span class="emoji">🏭</span>מפעל המפות</button>
+      <button class="vbtn" style="--c:var(--pink)" data-v="5"><span class="emoji">🎤</span>רוני שואו</button>
+    </div>
+    <div class="vstatus" id="vstatus"></div>
+  </div>
+</div></section>
+
+<footer>🗺️ האקדמיה של רוני · תוכנית אתר #1: גאוגרפיה, פרק 1 "יוצאים לדרך" · נבנה באהבה לרוני 💜</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- starfield ---------- */
+(()=>{const c=document.getElementById('stars'),x=c.getContext('2d');let w,h,s=[];
+function size(){w=c.width=innerWidth;h=c.height=innerHeight;s=Array.from({length:Math.min(220,w/5)},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.4+.2,t:Math.random()*6}))}
+size();addEventListener('resize',size);
+const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function draw(n){x.clearRect(0,0,w,h);for(const p of s){const a=.35+.65*Math.abs(Math.sin(p.t+n/1400));x.fillStyle=`rgba(255,255,255,${a})`;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()}if(!still)requestAnimationFrame(draw)})(0);})();
+
+/* ---------- countdown ---------- */
+(()=>{const exam=new Date('2026-11-12T08:00:00+02:00');const pad=n=>String(n).padStart(2,'0');
+function tick(){let d=Math.max(0,exam-Date.now())/1000;cdD.textContent=Math.floor(d/86400);cdH.textContent=pad(Math.floor(d%86400/3600));cdM.textContent=pad(Math.floor(d%3600/60));cdS.textContent=pad(Math.floor(d%60))}
+tick();setInterval(tick,1000);})();
+
+/* ---------- toast ---------- */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3200)}
+
+/* ---------- Hebrew speech ---------- */
+let heVoice=null;
+function pickVoice(){const v=speechSynthesis.getVoices();heVoice=v.find(v=>/^he|^iw/i.test(v.lang)&&/carmit|google/i.test(v.name))||v.find(v=>/^he|^iw/i.test(v.lang))||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text,opt={}){
+  if(!('speechSynthesis' in window)){toast('הדפדפן הזה לא תומך בהקראה 😕');return}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='he-IL';if(heVoice)u.voice=heVoice;u.rate=opt.rate||.95;u.pitch=opt.pitch||1.1;speechSynthesis.speak(u);
+  if(!heVoice)toast('לא נמצא קול עברי במכשיר. ייתכן שההקראה לא תישמע טוב');
+}
+
+/* ---------- Web Audio SFX ---------- */
+let ac;function A(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}
+function tone(f,t0,d,type='sine',g=.18,f2){const a=A(),o=a.createOscillator(),v=a.createGain();o.type=type;o.frequency.setValueAtTime(f,a.currentTime+t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,a.currentTime+t0+d);v.gain.setValueAtTime(0,a.currentTime+t0);v.gain.linearRampToValueAtTime(g,a.currentTime+t0+.01);v.gain.exponentialRampToValueAtTime(.001,a.currentTime+t0+d);o.connect(v).connect(a.destination);o.start(a.currentTime+t0);o.stop(a.currentTime+t0+d+.05)}
+function noise(t0,d,g=.2,hp=800){const a=A(),b=a.createBuffer(1,a.sampleRate*d,a.sampleRate),ch=b.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);const s=a.createBufferSource(),f=a.createBiquadFilter(),v=a.createGain();f.type='highpass';f.frequency.value=hp;v.gain.value=g;s.buffer=b;s.connect(f).connect(v).connect(a.destination);s.start(a.currentTime+t0)}
+const SFX={
+  correct(){tone(660,0,.15,'triangle');tone(990,.12,.3,'triangle')},
+  wrong(){tone(330,0,.18,'sine',.15,260);tone(262,.16,.3,'sine',.12,220)},
+  star(){[1319,1568,2093,2637].forEach((f,i)=>tone(f,i*.06,.35,'sine',.1))},
+  fanfare(){[[523,0],[659,.12],[784,.24],[1047,.36]].forEach(([f,t])=>tone(f,t,.22,'square',.07));tone(1047,.6,.7,'square',.08);tone(784,.6,.7,'triangle',.08);confetti()},
+  unlock(){noise(0,.05,.3,2000);tone(180,.06,.12,'square',.12,90);noise(.2,.08,.25,1200);tone(880,.3,.4,'triangle',.12)},
+  warp(){tone(200,0,.9,'sawtooth',.06,1800);tone(300,.05,.9,'sine',.08,2400);noise(0,.9,.06,3000)},
+  cash(){tone(1568,0,.08,'square',.06);tone(2093,.08,.4,'triangle',.12);noise(0,.15,.12,4000)}
+};
+
+/* ---------- confetti ---------- */
+function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const cols=['#ffcf4a','#ff6b6b','#3ee8b5','#5cc8ff','#b48cff','#ff7ad9'];for(let i=0;i<70;i++){const e=document.createElement('i');e.className='confetti';e.style.left=Math.random()*100+'vw';e.style.background=cols[i%cols.length];e.style.animationDuration=(1.8+Math.random()*1.8)+'s';e.style.animationDelay=Math.random()*.4+'s';e.style.borderRadius=Math.random()<.5?'50%':'2px';document.body.appendChild(e);setTimeout(()=>e.remove(),4200)}}
+
+/* ---------- buttons ---------- */
+document.addEventListener('click',e=>{
+  const s=e.target.closest('.sfx');if(s){SFX[s.dataset.sfx]?.()}
+  const d=e.target.closest('.demo');if(d){say(d.dataset.say)}
+});
+heroSpeak.onclick=()=>{SFX.star();setTimeout(()=>say('שלום! ברוכים הבאים לתוכנית של האקדמיה של רוני. בואו נגלה חמישה רעיונות מדהימים לאתר שיעזור לרוני להצליח במבחן בגאוגרפיה!'),350)};
+
+/* ---------- tabs + meters per idea ---------- */
+const SCORES={1:[9,9,8,7],2:[10,7,6,6],3:[9,7,6,7],4:[9,8,5,7],5:[7,8,10,9]};
+const ML=['🤩 כיף ו־WOW','🧠 עומק למידה','⚡ מהירות בנייה','🔁 מתאים לחזרה מהירה'];
+document.querySelectorAll('.idea').forEach(idea=>{
+  const tl=idea.querySelector('.tabs'),ps=[...idea.querySelectorAll('.panel')];
+  ps.forEach((p,i)=>{const b=document.createElement('button');b.className='tab';b.role='tab';b.textContent=p.dataset.t;b.setAttribute('aria-selected',i===0);b.onclick=()=>{ps.forEach(q=>q.classList.remove('on'));p.classList.add('on');tl.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t===b));tone(880,0,.06,'triangle',.05)};tl.appendChild(b)});
+  const m=idea.querySelector('.meters');SCORES[idea.dataset.idea].forEach((v,i)=>{m.insertAdjacentHTML('beforeend',`<div class="meter"><label><span>${ML[i]}</span><span>${v}/10</span></label><div class="bar"><i data-w="${v*10}%"></i></div></div>`)});
+});
+
+/* ---------- reveal on scroll ---------- */
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');en.target.querySelectorAll('.bar i').forEach(b=>b.style.width=b.dataset.w);io.unobserve(en.target)}}),{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ---------- vote (localStorage demo) ---------- */
+const KEY='roni-academy:plan-vote';const names={1:'ארכיפלג המפות 🏝️',2:'חדר הבריחה 🗝️',3:'מכונת הזמן ⏳',4:'מפעל המפות 🏭',5:'רוני שואו 🎤'};
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}}
+function show(v){document.querySelectorAll('.vbtn').forEach(b=>b.classList.toggle('sel',b.dataset.v==v?.id));vstatus.textContent=v?`💾 נשמר: רוני בחרה ב"${names[v.id]}" · ${new Date(v.at).toLocaleString('he-IL')} · רעננו את הדף, והבחירה עדיין כאן!`:''}
+show(load());
+document.querySelectorAll('.vbtn').forEach(b=>b.onclick=()=>{const v={id:b.dataset.v,at:Date.now()};try{localStorage.setItem(KEY,JSON.stringify(v))}catch{}show(v);SFX.fanfare();say(`יש! בחרת ב${names[v.id].replace(/[^֐-׿ ]/g,'')}. בחירה מצוינת!`)});
+</script>
+</body>
+</html>
