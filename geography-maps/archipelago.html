@@ -116,6 +116,8 @@ const BOATS = [['⛵', 0, 'מפרשית'], ['🛶', 80, 'קאנו'], ['🚤', 15
 
 const islandOpen = i => i === 0 || !!G.captains[T[i - 1].id];
 const levelStars = (tid, n) => G.levels[`${tid}-${n}`] || 0;
+/* a level counts as played once finished, even with 0 stars, so the next level always opens */
+const levelPlayed = (tid, n) => `${tid}-${n}` in G.levels;
 const islandStars = tid => [1, 2, 3].reduce((a, n) => a + levelStars(tid, n), 0);
 const allConquered = () => T.every(t => G.captains[t.id]);
 const currentIdx = () => { const i = T.findIndex(t => !G.captains[t.id]); return i < 0 ? 5 : i; };
@@ -212,8 +214,8 @@ function openIsland(i) {
   Sound.sfx('pop'); Sound.say('island_' + t.id);
   const ids = byTopic(t.id).map(q => q.id);
   const m = Math.round(Store.mastery(SID, ids) * 100);
-  const unlocked = n => n === 1 ? !!LS[t.id] : levelStars(t.id, n - 1) > 0;
-  const capOpen = [1, 2, 3].every(n => levelStars(t.id, n) > 0);
+  const unlocked = n => n === 1 ? !!LS[t.id] : levelPlayed(t.id, n - 1);
+  const capOpen = [1, 2, 3].every(n => levelPlayed(t.id, n));
   const starTxt = n => '⭐'.repeat(levelStars(t.id, n)) + '☆'.repeat(3 - levelStars(t.id, n));
   const html = `<div style="--c:${t.color}">
     <div style="margin-bottom:8px">${Book.chip(t.pages, `העמודים בספר: ${t.pages}`)}</div>
@@ -225,7 +227,7 @@ function openIsland(i) {
     </div></div>`;
   const close = UI.modal({ emoji: t.emoji, title: t.island, html, actions: [{ label: 'חזרה למפה', cls: 'ghost' }] });
   document.querySelectorAll('.node').forEach(b => b.onclick = () => {
-    if (b.classList.contains('locked')) { Sound.sfx('wrong'); UI.toast(b.dataset.n === 'cap' ? 'צריך לפחות כוכב אחד בכל 3 השלבים' : b.dataset.n === '1' ? 'קודם עושים את השיעור 📖' : 'סיימי קודם את השלב הקודם'); return; }
+    if (b.classList.contains('locked')) { Sound.sfx('wrong'); UI.toast(b.dataset.n === 'cap' ? 'קודם מסיימים את 3 השלבים' : b.dataset.n === '1' ? 'קודם עושים את השיעור 📖' : 'סיימי קודם את השלב הקודם'); return; }
     close(); Sound.sfx('whoosh');
     b.dataset.n === 'lesson' ? startLesson(i) : b.dataset.n === 'cap' ? startCaptain(i) : startLevel(i, +b.dataset.n);
   });
@@ -259,13 +261,13 @@ function startLevel(i, n, rs) {
     G.levels[key] = Math.max(prev, stars); Store.save();
     if (stars) Store.addCoins(stars * 10);
     endModal({
-      emoji: stars ? (stars === 3 ? '🏆' : '🎉') : '💪', title: stars ? 'שלב הושלם!' : 'כמעט!', stars,
-      html: `<p>${r.score} מתוך ${r.total} נכונות${stars ? ` · 🪙 +${r.coins + stars * 10}` : ''}</p>`,
+      emoji: stars ? (stars === 3 ? '🏆' : '🎉') : '💪', title: 'שלב הושלם!', stars,
+      html: `<p>${r.score} מתוך ${r.total} נכונות${stars ? ` · 🪙 +${r.coins + stars * 10}` : ''}</p>${stars < 3 ? '<p class="muted">רוצה עוד כוכבים? אפשר לשחק שוב בכל רגע ⭐</p>' : ''}`,
       voice: stars === 3 ? 'level_perfect' : stars ? 'level_win' : 'level_fail',
       actions: [
-        stars && n < 3 ? { label: `לשלב ${n + 1} ⟵`, onClick: () => startLevel(i, n + 1) } : null,
-        stars && n === 3 ? { label: 'לאי ⟵', onClick: () => { toMap(); openIsland(i); } } : null,
-        { label: '🔁 שוב', cls: stars ? 'ghost' : '', onClick: () => startLevel(i, n) },
+        n < 3 ? { label: `לשלב ${n + 1} ⟵`, onClick: () => startLevel(i, n + 1) } : null,
+        n === 3 ? { label: 'לאי ⟵', onClick: () => { toMap(); openIsland(i); } } : null,
+        { label: '🔁 שוב', cls: 'ghost', onClick: () => startLevel(i, n) },
         { label: '🗺️ למפה', cls: 'ghost', onClick: toMap }
       ]
     });
