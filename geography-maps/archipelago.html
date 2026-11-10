@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ארכיפלג המפות</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏝️</text></svg>">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="../shared/lesson.css">
+<style>
+body{background:#06204a}
+/* ---------- ocean map ---------- */
+#map{position:relative;height:calc(100svh - 62px);min-height:620px;max-width:1100px;margin:0 auto;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,#38b6ff 0%,#1478c8 35%,#0b3d7a 75%,#06204a 100%)}
+#map::before,#map::after{content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:repeating-radial-gradient(ellipse 60px 14px at 50% 50%,rgba(255,255,255,.07) 0 2px,transparent 3px 26px);animation:waves 18s linear infinite;opacity:.8}
+#map::after{animation-duration:26s;animation-direction:reverse;opacity:.5;background-size:140px 70px}
+@keyframes waves{to{transform:translate(60px,40px)}}
+#route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.deco{position:absolute;font-size:2rem;pointer-events:none;animation:bob 5s ease-in-out infinite;opacity:.9}
+.cloud{position:absolute;font-size:3rem;opacity:.55;pointer-events:none;animation:drift 40s linear infinite}
+@keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(120vw)}}
+.dolphin{animation:jump 6s ease-in-out infinite}
+@keyframes jump{0%,60%,100%{transform:translateY(0) rotate(0);opacity:0}70%{opacity:1;transform:translateY(-30px) rotate(-30deg)}85%{transform:translateY(-10px) rotate(30deg);opacity:1}}
+
+.island{position:absolute;transform:translate(-50%,-50%);background:none;border:0;cursor:pointer;color:var(--ink);text-align:center;z-index:3;padding:0}
+.island .blob{width:clamp(78px,15vw,108px);aspect-ratio:1.25;border-radius:50% 50% 46% 54%/60% 60% 40% 40%;
+  background:radial-gradient(ellipse at 50% 40%,#3dd68c 0 34%,#ffe7a0 36%,#e8b85a 70%,rgba(232,184,90,0) 72%);
+  display:grid;place-items:center;font-size:clamp(2rem,5vw,2.6rem);position:relative;
+  filter:drop-shadow(0 10px 0 rgba(0,40,90,.35));transition:transform .2s}
+.island .blob::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:3px solid var(--c);opacity:.0;transition:.3s}
+.island:hover .blob{transform:scale(1.07)}
+.island.current .blob::after{opacity:.9;animation:ring 1.6s ease-out infinite}
+@keyframes ring{from{transform:scale(.85);opacity:.9}to{transform:scale(1.3);opacity:0}}
+.island .name{display:block;margin-top:2px;font:400 1rem "Secular One";text-shadow:0 2px 6px rgba(0,0,0,.6);white-space:nowrap}
+.island .st{display:inline-block;font-size:.82rem;font-weight:700;background:rgba(0,0,0,.35);padding:2px 10px;border-radius:99px;margin-top:2px}
+.island.locked .blob{filter:grayscale(.85) brightness(.75) drop-shadow(0 10px 0 rgba(0,40,90,.35))}
+.island .badge{position:absolute;top:-6px;left:-4px;font-size:1.5rem;z-index:2}
+.island.conq .blob{filter:drop-shadow(0 0 18px rgba(255,207,74,.7)) drop-shadow(0 10px 0 rgba(0,40,90,.35))}
+
+.lighthouse .blob{background:radial-gradient(ellipse at 50% 70%,#8a8f9e 0 40%,rgba(0,0,0,0) 42%);font-size:3rem}
+.lighthouse.lit .blob::before{content:"";position:absolute;top:-10%;left:50%;width:280px;height:60px;transform-origin:0 50%;
+  background:linear-gradient(90deg,rgba(255,240,150,.7),transparent);clip-path:polygon(0 45%,100% 0,100% 100%,0 55%);animation:beam 4s linear infinite;pointer-events:none}
+@keyframes beam{to{transform:rotate(360deg)}}
+.whirl .blob{background:radial-gradient(circle,#0b3d7a 0 20%,#5cc8ff 30%,#1478c8 50%,rgba(0,0,0,0) 70%);animation:rot 4s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.whirl .blob span{display:inline-block;animation:rot 4s linear infinite reverse}
+
+#boat{position:absolute;z-index:4;font-size:2.4rem;transform:translate(-160%,-30%);transition:left 1.6s cubic-bezier(.5,0,.3,1),top 1.6s cubic-bezier(.5,0,.3,1);pointer-events:none;filter:drop-shadow(0 6px 4px rgba(0,0,0,.4))}
+#boat span{display:inline-block;animation:bob 1.8s ease-in-out infinite}
+
+/* ---------- island sheet ---------- */
+.nodes{display:grid;gap:10px;margin-top:16px;text-align:right}
+.node{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px 14px;color:var(--ink);font:600 1.05rem Rubik;cursor:pointer;width:100%}
+.node .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:rgba(255,255,255,.08);flex:none}
+.node .ns{margin-inline-start:auto;letter-spacing:2px}
+.node.locked{opacity:.45;cursor:not-allowed}
+.node.cap{border-color:rgba(255,207,74,.5);background:linear-gradient(90deg,rgba(255,207,74,.12),var(--card))}
+.node:not(.locked):hover{border-color:var(--c)}
+
+/* ---------- play ---------- */
+#play{max-width:760px;margin:0 auto;padding:16px 16px calc(40px + var(--safe-b))}
+.phead{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.phead .pt{font:400 1.25rem "Secular One";flex:1}
+.dots{display:flex;gap:6px;width:100%}
+.dots i{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.12)}
+.dots i.ok{background:var(--ok)}.dots i.bad{background:var(--bad)}.dots i.half{background:var(--gold)}.dots i.cur{background:var(--sky);box-shadow:0 0 10px var(--sky)}
+.hearts{font-size:1.4rem;letter-spacing:2px}
+.hearts .lost{filter:grayscale(1);opacity:.35}
+.golden .qcard{background:linear-gradient(165deg,#7a5a10,#3d2a05);border-color:var(--gold);box-shadow:0 0 50px rgba(255,207,74,.45)}
+
+/* certificate */
+.cert{background:var(--parch);color:var(--parch-ink);border-radius:20px;padding:26px 20px;border:6px double #b8893a;position:relative}
+.cert h2{color:#7a4a10;font-size:1.9rem}
+.cert .nm{font:400 2.4rem "Secular One";color:#b03a2e;margin:6px 0}
+.cert .seal{position:absolute;bottom:-18px;left:-10px;font-size:3.4rem;transform:rotate(-14deg)}
+@media print{body *{visibility:hidden}.cert,.cert *{visibility:visible}.cert{position:fixed;inset:20px}}
+
+/* shop */
+.shop{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.boatbtn{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 6px;color:var(--ink);cursor:pointer;font:700 .9rem Rubik}
+.boatbtn .e{font-size:2.2rem;display:block}
+.boatbtn.sel{border-color:var(--gold);box-shadow:0 0 16px rgba(255,207,74,.4)}
+.boatbtn:disabled{opacity:.45}
+</style>
+</head>
+<body>
+<div id="map" aria-label="מפת הארכיפלג"></div>
+<div id="play" class="hidden"></div>
+
+<script src="../shared/progress.js"></script>
+<script src="../shared/sound.js"></script>
+<script src="../shared/ui.js"></script>
+<script src="../shared/book.js"></script>
+<script src="../shared/engine.js"></script>
+<script src="../shared/lesson.js"></script>
+<script src="content.js"></script>
+<script src="book.js"></script>
+<script src="phrases.js"></script>
+<script src="lessons.js"></script>
+<script>
+const SID = GEO.id, Q = GEO.questions, T = GEO.topics;
+const { $, esc, shuffle } = UI;
+Sound.config({ base: 'audio/', texts: GEO_PHRASES });
+Engine.setTopics(T);
+UI.topbar({ title: '🏝️ ארכיפלג המפות', back: 'index.html',
+  extra: `<span class="chip">⭐ <span id="hStars">0</span></span><span class="chip">🪙 <span id="hCoins">0</span></span><button class="icon-btn" id="bShop" title="מספנה" aria-label="מספנה">🛶</button>` });
+UI.stars();
+
+const G = Store.game(SID, 'arch', { levels: {}, captains: {}, completed: false, boatAt: 0, finalBest: 0 });
+const LS = Store.game(SID, 'lessons', {});
+const byTopic = id => Q.filter(q => q.t === id);
+const POS = [[72, 84], [30, 68], [70, 51], [31, 35], [69, 19]];
+const LIGHT = [30, 8], WHIRL = [12, 90];
+const BOATS = [['⛵', 0, 'מפרשית'], ['🛶', 80, 'קאנו'], ['🚤', 150, 'סירת מנוע'], ['🐋', 250, 'לווייתן'], ['🛳️', 350, 'אונייה'], ['🦄', 500, 'יוניקורן'], ['🦆', 120, 'ברווז'], ['🐢', 200, 'צב ים'], ['🚀', 800, 'טיל']];
+
+const islandOpen = i => i === 0 || !!G.captains[T[i - 1].id];
+const levelStars = (tid, n) => G.levels[`${tid}-${n}`] || 0;
+const islandStars = tid => [1, 2, 3].reduce((a, n) => a + levelStars(tid, n), 0);
+const allConquered = () => T.every(t => G.captains[t.id]);
+const currentIdx = () => { const i = T.findIndex(t => !G.captains[t.id]); return i < 0 ? 5 : i; };
+const posOf = i => i >= 5 ? LIGHT : POS[i];
+
+function hud() {
+  $('#hStars').textContent = T.reduce((a, t) => a + islandStars(t.id), 0);
+  $('#hCoins').textContent = Store.data.profile.coins;
+}
+
+/* ================= MAP ================= */
+function drawMap() {
+  const m = $('#map');
+  const pts = [...POS, LIGHT];
+  const cur = currentIdx();
+  const d = 'M ' + pts.map(p => p.join(' ')).join(' L ');
+  const doneD = 'M ' + pts.slice(0, Math.min(cur, 5) + 1).map(p => p.join(' ')).join(' L ');
+  m.innerHTML = `
+    <svg id="route" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path d="${d}" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-dasharray="1 9" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke"/>
+      <path d="${doneD}" stroke="#ffcf4a" stroke-width="4" stroke-dasharray="1 9" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <span class="cloud" style="top:4%">☁️</span><span class="cloud" style="top:40%;animation-delay:-18s;font-size:2.2rem">☁️</span>
+    <span class="deco dolphin" style="left:48%;top:62%">🐬</span>
+    <span class="deco" style="left:86%;top:36%;animation-delay:1s">🐙</span>
+    <span class="deco" style="left:10%;top:48%;animation-delay:2s">🐠</span>
+    <span class="deco" style="left:52%;top:28%;animation-delay:.5s;font-size:1.4rem">✨</span>
+    <span class="deco" style="left:88%;top:70%;animation-delay:1.5s">🦀</span>`;
+
+  T.forEach((t, i) => {
+    const open = islandOpen(i), conq = !!G.captains[t.id];
+    const b = document.createElement('button');
+    b.className = `island ${open ? '' : 'locked'} ${conq ? 'conq' : ''} ${i === cur ? 'current' : ''}`;
+    b.style.cssText = `left:${POS[i][0]}%;top:${POS[i][1]}%;--c:${t.color}`;
+    b.innerHTML = `<div class="blob">${t.emoji}${conq ? '<span class="badge">🚩</span>' : open ? '' : '<span class="badge">🔒</span>'}</div>
+      <span class="name">${t.island}</span><span class="st">${open && !LS[t.id] ? '📖 שיעור' : `⭐ ${islandStars(t.id)}/9`}</span>`;
+    b.onclick = () => open ? openIsland(i) : (Sound.sfx('wrong'), UI.toast('כבשי קודם את האי הקודם 🔒'));
+    m.appendChild(b);
+  });
+
+  const lit = allConquered();
+  const L = document.createElement('button');
+  L.className = `island lighthouse ${lit ? 'lit current' : 'locked'} ${G.completed ? 'conq' : ''}`;
+  L.style.cssText = `left:${LIGHT[0]}%;top:${LIGHT[1]}%;--c:#ffcf4a`;
+  L.innerHTML = `<div class="blob">🗼${G.completed ? '<span class="badge">🏆</span>' : lit ? '' : '<span class="badge">🔒</span>'}</div><span class="name">המגדלור</span><span class="st">${G.completed ? 'נכבש!' : 'האתגר האחרון'}</span>`;
+  L.onclick = () => lit ? startFinal() : (Sound.sfx('wrong'), UI.toast('המגדלור יידלק אחרי שתכבשי את כל 5 האיים 🗼'));
+  m.appendChild(L);
+
+  const mist = Store.mistakes(SID, Q.map(q => q.id));
+  if (mist.length) {
+    const W = document.createElement('button');
+    W.className = 'island whirl';
+    W.style.cssText = `left:${WHIRL[0]}%;top:${WHIRL[1]}%;--c:#5cc8ff`;
+    W.innerHTML = `<div class="blob"><span>🌀</span></div><span class="name">ים הטעויות</span><span class="st">${mist.length} שאלות</span>`;
+    W.onclick = startMistakes;
+    m.appendChild(W);
+  }
+
+  const boat = document.createElement('div');
+  boat.id = 'boat';
+  boat.innerHTML = `<span>${Store.data.profile.boat}</span>`;
+  const from = posOf(Math.min(G.boatAt ?? 0, 5)), to = posOf(cur);
+  boat.style.left = from[0] + '%'; boat.style.top = from[1] + '%';
+  m.appendChild(boat);
+  if ((G.boatAt ?? 0) !== cur) {
+    setTimeout(() => { Sound.sfx('splash'); boat.style.left = to[0] + '%'; boat.style.top = to[1] + '%'; }, 500);
+    G.boatAt = cur; Store.save();
+  }
+  hud();
+}
+
+/* ================= ISLAND SHEET ================= */
+function startLesson(i, rs) {
+  const t = T[i];
+  Lesson.play(GEO_LESSONS[t.id], { tid: t.id, skin: 'sea', questions: Q,
+    startAt: rs?.idx || 0, seen: rs?.seen || [],
+    onProgress: (idx, seen) => Store.setResume({ page: 'arch', view: 'lesson', i, idx, seen }),
+    onExit: () => { Store.clearResume('arch'); drawMap(); },
+    onDone: () => {
+      Store.clearResume('arch');
+      const first = !LS[t.id];
+      LS[t.id] = true; Store.save();
+      if (first) Store.addCoins(30);
+      drawMap();
+      UI.modal({ emoji: '🎓', title: 'השיעור הושלם!', dismiss: false,
+        html: `<p style="font-size:1.15rem">למדת את כל החומר של <b>${t.island}</b>.<br>עכשיו בואי נתרגל במשחק!</p>${first ? '<p>🪙 +30</p>' : ''}`,
+        actions: [{ label: '🌱 לשלב 1 ⟵', onClick: () => startLevel(i, 1) }, { label: '🏝️ לאי', cls: 'ghost', onClick: () => openIsland(i) }] });
+    } });
+}
+
+function openIsland(i) {
+  const t = T[i];
+  if (!LS[t.id]) { Sound.sfx('whoosh'); startLesson(i); return; }
+  Sound.sfx('pop'); Sound.say('island_' + t.id);
+  const ids = byTopic(t.id).map(q => q.id);
+  const m = Math.round(Store.mastery(SID, ids) * 100);
+  const unlocked = n => n === 1 ? !!LS[t.id] : levelStars(t.id, n - 1) > 0;
+  const capOpen = [1, 2, 3].every(n => levelStars(t.id, n) > 0);
+  const starTxt = n => '⭐'.repeat(levelStars(t.id, n)) + '☆'.repeat(3 - levelStars(t.id, n));
+  const html = `<div style="--c:${t.color}">
+    <div style="margin-bottom:8px">${Book.chip(t.pages, `העמודים בספר: ${t.pages}`)}</div>
+    <div class="muted">שליטה בנושא: <b style="color:${t.color}">${m}%</b></div><div class="bar" style="margin:6px 0 4px"><i style="width:${m}%"></i></div>
+    <div class="nodes">
+      <button class="node" data-n="lesson" style="border-color:rgba(92,200,255,.5)"><span class="ic">📖</span>שיעור<span class="ns">${LS[t.id] ? '✅ חזרה' : 'להתחיל!'}</span></button>
+      ${[1, 2, 3].map(n => `<button class="node ${unlocked(n) ? '' : 'locked'}" data-n="${n}"><span class="ic">${['🌱', '🌿', '🌴'][n - 1]}</span>שלב ${n}<span class="ns">${unlocked(n) ? starTxt(n) : '🔒'}</span></button>`).join('')}
+      <button class="node cap ${capOpen ? '' : 'locked'}" data-n="cap"><span class="ic">🏴‍☠️</span>אתגר הקפטן<span class="ns">${G.captains[t.id] ? '✅ נכבש' : capOpen ? '4 מתוך 5' : '🔒'}</span></button>
+    </div></div>`;
+  const close = UI.modal({ emoji: t.emoji, title: t.island, html, actions: [{ label: 'חזרה למפה', cls: 'ghost' }] });
+  document.querySelectorAll('.node').forEach(b => b.onclick = () => {
+    if (b.classList.contains('locked')) { Sound.sfx('wrong'); UI.toast(b.dataset.n === 'cap' ? 'צריך לפחות כוכב אחד בכל 3 השלבים' : b.dataset.n === '1' ? 'קודם עושים את השיעור 📖' : 'סיימי קודם את השלב הקודם'); return; }
+    close(); Sound.sfx('whoosh');
+    b.dataset.n === 'lesson' ? startLesson(i) : b.dataset.n === 'cap' ? startCaptain(i) : startLevel(i, +b.dataset.n);
+  });
+}
+
+/* ================= QUESTION SELECTION ================= */
+const interactive = q => ['order', 'sort', 'match'].includes(q.k);
+function levelSet(tid, n) {
+  const pool = byTopic(tid);
+  if (n === 1) return Engine.pick(pool, 5, SID, q => q.d === 1 || (q.d === 2 && (q.k === 'mc' || q.k === 'tf')));
+  if (n === 2) return Engine.pick(pool, 5, SID, q => q.d <= 2 && q.k !== 'open');
+  const four = Engine.pick(pool, 4, SID, q => q.d >= 2 && q.k !== 'open');
+  const open = Engine.pick(pool, 1, SID, q => q.k === 'open');
+  return [...four, ...(open.length ? open : Engine.pick(pool, 1, SID, q => !four.includes(q) && q.k !== 'open'))];
+}
+function captainSet(tid) {
+  const pool = byTopic(tid).filter(q => q.k !== 'open');
+  const one = Engine.pick(pool, 1, SID, interactive);
+  return shuffle([...one, ...Engine.pick(pool, 4, SID, q => q.d >= 2 && !one.includes(q), new Set(one.map(q => q.id)))]);
+}
+
+/* ================= SESSION ================= */
+const byId = id => Q.find(q => q.id === id);
+const qsFrom = (rs, make) => rs ? rs.qids.map(byId).filter(Boolean) : Engine.byDifficulty(make());
+
+function startLevel(i, n, rs) {
+  const t = T[i];
+  runSession({ title: `${t.emoji} ${t.island} · שלב ${n}`, questions: qsFrom(rs, () => levelSet(t.id, n)), save: { kind: 'level', args: [i, n] }, rs, onEnd: r => {
+    const stars = r.score >= 5 ? 3 : r.score >= 4 ? 2 : r.score >= 3 ? 1 : 0;
+    const key = `${t.id}-${n}`, prev = G.levels[key] || 0;
+    G.levels[key] = Math.max(prev, stars); Store.save();
+    if (stars) Store.addCoins(stars * 10);
+    endModal({
+      emoji: stars ? (stars === 3 ? '🏆' : '🎉') : '💪', title: stars ? 'שלב הושלם!' : 'כמעט!', stars,
+      html: `<p>${r.score} מתוך ${r.total} נכונות${stars ? ` · 🪙 +${r.coins + stars * 10}` : ''}</p>`,
+      voice: stars === 3 ? 'level_perfect' : stars ? 'level_win' : 'level_fail',
+      actions: [
+        stars && n < 3 ? { label: `לשלב ${n + 1} ⟵`, onClick: () => startLevel(i, n + 1) } : null,
+        stars && n === 3 ? { label: 'לאי ⟵', onClick: () => { toMap(); openIsland(i); } } : null,
+        { label: '🔁 שוב', cls: stars ? 'ghost' : '', onClick: () => startLevel(i, n) },
+        { label: '🗺️ למפה', cls: 'ghost', onClick: toMap }
+      ]
+    });
+  } });
+}
+
+function startCaptain(i, rs) {
+  const t = T[i];
+  if (!rs) Sound.say('captain_intro');
+  runSession({ title: `🏴‍☠️ אתגר הקפטן · ${t.island}`, questions: qsFrom(rs, () => captainSet(t.id)), hearts: null, save: { kind: 'captain', args: [i] }, rs, onEnd: r => {
+    const win = r.score >= 4;
+    const first = win && !G.captains[t.id];
+    if (win) { G.captains[t.id] = true; Store.save(); if (first) Store.addCoins(50); }
+    endModal({
+      emoji: win ? '🏴‍☠️' : '⚓', title: win ? 'האי נכבש!' : 'הקפטן ניצח הפעם',
+      html: `<p>${r.score} מתוך ${r.total} נכונות${first ? ' · 🪙 +50' : ''}</p>${win && i < 4 ? `<p>🔓 <b>${T[i + 1].island}</b> נפתח!</p>` : ''}${win && allConquered() ? '<p>🗼 <b>המגדלור נדלק!</b></p>' : ''}`,
+      voice: win ? (allConquered() ? 'lighthouse_open' : 'captain_win') : 'captain_fail', confetti: win,
+      actions: [
+        win ? { label: '⛵ להפליג!', onClick: toMap } : { label: '🔁 שוב', onClick: () => startCaptain(i) },
+        win ? null : { label: '🗺️ למפה', cls: 'ghost', onClick: toMap }
+      ]
+    });
+  } });
+}
+
+function startMistakes(rs) {
+  const ids = Store.mistakes(SID, Q.map(q => q.id));
+  if (!rs && !ids.length) { Sound.say('mistakes_empty'); UI.toast('ים הטעויות ריק! 🎉'); return; }
+  if (!rs) Sound.say('mistakes_intro');
+  const qs = qsFrom(rs, () => shuffle(Q.filter(q => ids.includes(q.id))).slice(0, 8));
+  runSession({ title: '🌀 ים הטעויות', questions: qs, save: { kind: 'mistakes', args: [] }, rs, onEnd: r => endModal({
+    emoji: '🌊', title: 'סיבוב בים הטעויות הושלם', html: `<p>${r.score} מתוך ${r.total} נכונות · 🪙 +${r.coins}</p><p class="muted">שאלות שעניתי עליהן נכון יוצאות מהים 🐠</p>`,
+    voice: r.score >= r.total * .8 ? 'level_perfect' : 'level_win', stars: null,
+    actions: [{ label: '🗺️ למפה', onClick: toMap }]
+  }) });
+}
+
+function startFinal(rs) {
+  if (!rs) Sound.say('final_intro');
+  const pool = Q.filter(q => q.k !== 'open' && q.d >= 2);
+  const golden = rs ? rs.gids.map(byId) : shuffle(Q.filter(q => q.k === 'order' || q.k === 'match'));
+  const make = () => {
+    const per = T.map(t => Engine.pick(pool.filter(q => q.t === t.id && !golden.slice(0, 3).includes(q)), 1, SID)[0]).filter(Boolean);
+    return shuffle([...per, ...Engine.pick(pool, 2, SID, q => !per.includes(q) && !interactive(q))]);
+  };
+  runSession({ title: '🗼 המגדלור · האתגר האחרון', questions: qsFrom(rs, make), hearts: 3, golden, save: { kind: 'final', args: [] }, rs, onEnd: r => {
+    if (r.win) {
+      const first = !G.completed;
+      G.completed = true; G.finalBest = Math.max(G.finalBest || 0, r.heartsLeft); Store.save();
+      if (first) Store.addCoins(200);
+      certificate(r, first);
+    } else endModal({
+      emoji: '💔', title: 'נגמרו הלבבות', html: '<p>לא נורא! אפשר לחזור לים הטעויות לתרגל, ולנסות שוב.</p>', voice: 'final_fail',
+      actions: [{ label: '🔁 שוב', onClick: startFinal }, { label: '🗺️ למפה', cls: 'ghost', onClick: toMap }]
+    });
+  } });
+}
+
+/* runSession({title, questions, hearts, golden, save, rs, onEnd})
+ * save = {kind, args} identifies the session; rs = saved state to resume from */
+function runSession({ title, questions, hearts = null, golden = null, save, rs, onEnd: done }) {
+  const map = $('#map'), play = $('#play');
+  map.classList.add('hidden'); play.classList.remove('hidden'); scrollTo(0, 0);
+  const st = rs?.st || {};
+  let i = st.i || 0, score = st.score || 0, coins = st.coins || 0, h = st.h ?? hearts, goldenIdx = st.goldenIdx || 0, inGolden = false;
+  const results = st.results || [];
+  /* persist the position of the NEXT thing to show, so a refresh never repeats an answered question */
+  const persist = (next, golden_) => Store.setResume({ page: 'arch', view: 'session', ...save, qids: questions.map(q => q.id), gids: golden ? golden.map(q => q.id) : null,
+    st: { i: next, score, coins, h, results, goldenIdx, golden: golden_ } });
+  const onEnd = r => { Store.clearResume('arch'); done(r); };
+  play.innerHTML = `<div class="phead"><button class="icon-btn" id="quit" title="יציאה" aria-label="יציאה">✖</button><span class="pt">${title}</span>
+    ${hearts ? '<span class="hearts" id="hearts"></span>' : ''}<div class="dots" id="dots"></div></div><div id="qhost"></div>`;
+  $('#quit').onclick = () => UI.confirmBox('לצאת מהשלב?', '<p class="muted">ההתקדמות בשלב הזה לא תישמר.</p>', 'כן, לצאת', () => { Sound.stop(); Store.clearResume('arch'); toMap(); });
+  const drawDots = () => {
+    const total = questions.length + (golden ? 1 : 0);
+    $('#dots').innerHTML = Array.from({ length: total }, (_, n) => `<i class="${results[n] ?? (n === i ? 'cur' : '')}"></i>`).join('');
+    if (hearts) $('#hearts').innerHTML = Array.from({ length: hearts }, (_, n) => `<span class="${n < h ? '' : 'lost'}">❤️</span>`).join('');
+  };
+  const show = q => {
+    drawDots();
+    const host = $('#qhost');
+    host.classList.toggle('golden', inGolden);
+    Engine.render(host, q, { label: inGolden ? '👑 שאלת הזהב' : `${i + 1}/${questions.length}`, read: !inGolden && undefined, onResult: res => {
+      Store.record(SID, q.id, res.correct);
+      score += res.score;
+      results[i] = res.score === 1 ? 'ok' : res.score > 0 ? 'half' : 'bad';
+      if (res.score === 1) { coins += 10; Store.addCoins(10); UI.floater('+10 🪙', innerWidth / 2 - 40, innerHeight / 2); hud(); }
+      if (res.score < 1 && h != null) { h--; setTimeout(() => Sound.sfx('heart'), 600); }
+      drawDots();
+      const last = h === 0;
+      if (last) persist(questions.length, false);
+      else if (inGolden) { if (!res.correct) goldenIdx++; persist(questions.length, !res.correct); }
+      else persist(i + 1, !!golden && i + 1 >= questions.length);
+      Engine.feedback(host, q, res, { nextLabel: last ? 'לסיום' : 'המשך ⟵', onNext: () => {
+        if (h === 0) return onEnd({ win: false, score, total: questions.length, coins });
+        if (inGolden) {
+          if (res.correct) return onEnd({ win: true, score, total: questions.length, coins, heartsLeft: h });
+          return askGolden();
+        }
+        i++;
+        if (i < questions.length) return show(questions[i]);
+        if (golden) return askGolden();
+        onEnd({ win: true, score, total: questions.length, coins });
+      } });
+    } });
+  };
+  const askGolden = () => {
+    inGolden = true; i = questions.length;
+    persist(questions.length, true);
+    results[i] = undefined;
+    const q = golden[goldenIdx % golden.length];
+    Sound.sfx('drum');
+    UI.modal({ emoji: '👑', title: 'שאלת הזהב!', html: '<p>תשובה נכונה, והארכיפלג כולו שלך!</p>', dismiss: false, actions: [{ label: 'אני מוכנה! ✨', onClick: () => show(q) }] });
+    setTimeout(() => Sound.say('golden_q'), 900);
+  };
+  if (h === 0) return onEnd({ win: false, score, total: questions.length, coins });
+  if (st.golden) return askGolden();
+  if (i >= questions.length) return onEnd({ win: true, score, total: questions.length, coins, heartsLeft: h });
+  persist(i, false);
+  show(questions[i]);
+}
+
+function endModal({ emoji, title, html, stars, voice, actions, confetti }) {
+  const starsHtml = stars == null ? '' : `<div class="stars-row">${[0, 1, 2].map(() => '<span>⭐</span>').join('')}</div>`;
+  UI.modal({ emoji, title, html: starsHtml + html, dismiss: false, actions: actions.filter(Boolean) });
+  if (stars) { UI.$$('.stars-row span').forEach((s, n) => n < stars && setTimeout(() => { s.classList.add('on'); Sound.sfx('star'); }, 400 + n * 450)); }
+  if (stars === 3 || confetti) { Sound.sfx('fanfare'); UI.confetti(); }
+  setTimeout(() => Sound.say(voice), stars ? 1500 : 500);
+  hud();
+}
+
+function certificate(r, first) {
+  Sound.sfx('fanfare'); UI.confetti(140); setTimeout(() => Sound.sfx('applause'), 900);
+  setTimeout(() => Sound.say('arch_complete'), 1200);
+  const stars = T.reduce((a, t) => a + islandStars(t.id), 0);
+  UI.modal({ html: `<div class="cert">
+      <div style="font-size:2.6rem">🗺️🧭📜</div>
+      <h2>תעודת קרטוגרפית מוסמכת</h2>
+      <div>מוענקת בגאווה ל</div><div class="nm">רוני</div>
+      <div>על כיבוש כל 5 האיים ועל ניצחון באתגר המגדלור<br>במסע אל עולם המפות</div>
+      <div style="margin-top:10px;font-weight:700">⭐ ${stars}/45 כוכבים · ❤️ ${r.heartsLeft} לבבות נשארו${first ? ' · 🪙 +200' : ''}</div>
+      <div style="margin-top:8px;font-size:.9rem">${new Date().toLocaleDateString('he-IL')}</div>
+      <span class="seal">🏅</span></div>`, dismiss: false,
+    actions: [{ label: '🖨️ הדפסה', cls: 'ghost', keep: true, onClick: () => print() }, { label: '🎓 למבחן הגמר', onClick: () => location.href = 'exam.html' }, { label: '🗺️ למפה', cls: 'ghost', onClick: toMap }] });
+}
+
+function toMap() {
+  Sound.stop();
+  Store.clearResume('arch');
+  $('#play').classList.add('hidden'); $('#play').innerHTML = '';
+  $('#map').classList.remove('hidden');
+  drawMap();
+}
+
+/* ================= SHOP ================= */
+$('#bShop').onclick = () => {
+  const P = Store.data.profile;
+  const draw = o => {
+    o.querySelector('.shop').innerHTML = BOATS.map(([e, price, name]) => {
+      const own = P.boats.includes(e);
+      return `<button class="boatbtn ${P.boat === e ? 'sel' : ''}" data-e="${e}" data-p="${price}" ${!own && P.coins < price ? 'disabled' : ''}><span class="e">${e}</span>${name}<br>${own ? (P.boat === e ? '✔ בשימוש' : 'שלי') : `🪙 ${price}`}</button>`;
+    }).join('');
+    o.querySelector('.bal').textContent = P.coins;
+  };
+  const o = UI.modal({ emoji: '🛶', title: 'המספנה', html: `<p class="muted">יש לך 🪙 <b class="bal"></b> מטבעות. מרוויחים 10 על כל תשובה נכונה.</p><div class="shop"></div>`, actions: [{ label: 'סגירה', cls: 'ghost' }] }).el;
+  draw(o);
+  o.querySelector('.shop').onclick = e => {
+    const b = e.target.closest('.boatbtn'); if (!b || b.disabled) return;
+    const em = b.dataset.e, price = +b.dataset.p;
+    if (!P.boats.includes(em)) { P.boats.push(em); Store.addCoins(-price); Sound.sfx('coin'); Sound.say('boat_bought'); UI.confetti(30); }
+    else Sound.sfx('pop');
+    P.boat = em; Store.save(); draw(o); drawMap();
+  };
+};
+
+drawMap();
+const RS = Store.getResume('arch');
+if (RS) {
+  const S = { level: startLevel, captain: startCaptain, mistakes: startMistakes, final: startFinal };
+  try {
+    if (RS.view === 'lesson') startLesson(RS.i, RS);
+    else if (RS.view === 'session' && S[RS.kind]) S[RS.kind](...RS.args, RS);
+    UI.toast('ממשיכים מאיפה שעצרת ✨');
+  } catch (e) { Store.clearResume('arch'); toMap(); }
+} else UI.gate({ title: 'ארכיפלג המפות', sub: '5 איים · אתגרי קפטן · המגדלור', emoji: '🏝️', once: 'arch-gate', onStart: fresh => { if (fresh) { Sound.sfx('splash'); setTimeout(() => Sound.say('arch_intro'), 400); } } });
+</script>
+</body>
+</html>

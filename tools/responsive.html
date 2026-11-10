@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Responsive check</title>
+<style>
+/* Dev tool: preview a page at a device width, scaled to fit this window.
+   Usage: tools/responsive.html?w=360&h=740&src=../geography-maps/index.html */
+html,body{margin:0;height:100%;background:#222;font:13px system-ui;color:#ccc}
+.bar{padding:6px 10px}
+.stage{position:relative;overflow:hidden}
+iframe{border:0;transform-origin:0 0;background:#fff;position:absolute;top:0;left:0}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div class="stage" id="stage"><iframe id="f"></iframe></div>
+<script>
+const p = new URLSearchParams(location.search);
+const w = +(p.get('w') || 390), h = +(p.get('h') || 844), src = p.get('src') || '../index.html';
+const f = document.getElementById('f'), st = document.getElementById('stage');
+f.width = w; f.height = h; f.src = src;
+const fit = () => {
+  const sc = Math.min(1, innerWidth / w, (innerHeight - 30) / h);
+  f.style.transform = `scale(${sc})`;
+  st.style.width = w * sc + 'px'; st.style.height = h * sc + 'px';
+  document.getElementById('bar').textContent = `${w}×${h} @ ${Math.round(sc * 100)}% · ${src}`;
+};
+fit(); addEventListener('resize', fit);
+</script>
+</body>
+</html>

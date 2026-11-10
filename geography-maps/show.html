@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>רוני שואו</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎤</text></svg>">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="../shared/lesson.css">
+<style>
+body{background:radial-gradient(ellipse at 50% -20%,#8a2fb8 0%,#3b0f5a 40%,#12052a 80%) fixed}
+.stage-lights{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.beam{position:absolute;top:-20%;width:220px;height:140%;background:linear-gradient(rgba(255,122,217,.22),transparent 70%);transform-origin:50% 0;filter:blur(8px)}
+.beam.b1{left:10%;animation:sweep 7s ease-in-out infinite}
+.beam.b2{right:10%;animation:sweep 8s ease-in-out infinite reverse;background:linear-gradient(rgba(92,200,255,.2),transparent 70%)}
+@keyframes sweep{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
+.bulbs{display:flex;justify-content:space-between;padding:8px 6px}
+.bulbs i{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);animation:blink .8s infinite alternate}
+.bulbs i:nth-child(2n){animation-delay:.4s}
+@keyframes blink{to{opacity:.2;box-shadow:none}}
+
+.view{max-width:1000px;margin:0 auto;padding:18px 16px calc(40px + var(--safe-b))}
+/* ---------- menu ---------- */
+.neon{font:400 clamp(3rem,11vw,6rem) "Secular One";text-align:center;color:#fff;text-shadow:0 0 6px #fff,0 0 20px #ff7ad9,0 0 40px #ff7ad9,0 0 80px #b48cff;animation:flicker 4s infinite;margin-top:10px}
+@keyframes flicker{0%,18%,22%,62%,64%,100%{opacity:1}20%,63%{opacity:.6}}
+.host{text-align:center;font-size:4rem;margin:-6px 0 4px;animation:bob 2.6s ease-in-out infinite}
+.sub{text-align:center;color:#f0d6ff;font-size:1.15rem;margin-bottom:22px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.mode.learn{grid-column:1/-1;border-color:var(--sky);background:linear-gradient(160deg,rgba(92,200,255,.25),rgba(180,140,255,.1));display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.mode.learn .e{font-size:3.6rem}
+.topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:16px}
+.tbtn{border-radius:22px;padding:18px 12px;border:2px solid var(--c);background:linear-gradient(160deg,color-mix(in srgb,var(--c) 30%,transparent),rgba(255,255,255,.03));color:var(--ink);cursor:pointer;text-align:center;font:700 1.05rem Rubik;position:relative;transition:transform .2s}
+.tbtn:hover{transform:translateY(-4px)}
+.tbtn .e{font-size:2.8rem;display:block}
+.tbtn .ok{position:absolute;top:8px;left:10px;font-size:1.2rem}
+.mode{border-radius:26px;padding:22px;cursor:pointer;border:2px solid rgba(255,255,255,.18);color:var(--ink);text-align:right;font-family:Rubik;background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03));transition:transform .2s,box-shadow .2s;position:relative}
+.mode:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(255,122,217,.35)}
+.mode .e{font-size:3rem;display:block}
+.mode h3{font-size:1.6rem;margin:6px 0}
+.mode p{color:#e8d3ff;margin:0 0 12px}
+.mode.main{border-color:var(--gold);background:linear-gradient(160deg,rgba(255,207,74,.25),rgba(255,122,217,.08))}
+.mode .won{position:absolute;top:14px;left:14px;background:var(--gold);color:#1b1030;font-weight:900;font-size:.85rem;padding:4px 10px;border-radius:99px}
+
+/* ---------- ladder ---------- */
+.lgrid{display:grid;grid-template-columns:1fr 230px;gap:18px;align-items:start}
+.ladder{background:rgba(10,4,30,.6);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:10px;display:flex;flex-direction:column-reverse;gap:4px;position:sticky;top:76px}
+.rung{display:flex;justify-content:space-between;padding:6px 12px;border-radius:10px;font-weight:700;font-size:.95rem;color:#cdb8f0}
+.rung.safe{color:#fff}
+.rung.done{color:var(--ok)}
+.rung.cur{background:linear-gradient(90deg,var(--gold),#ff9f43);color:#1b1030;box-shadow:0 0 20px rgba(255,207,74,.5);animation:pulse 1.4s infinite}
+.rung.top{color:var(--gold)}
+.lifelines{display:flex;gap:10px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.ll{width:74px;height:54px;border-radius:50%/60%;border:2px solid var(--sky);background:radial-gradient(#2a3a9a,#141a5a);color:#fff;font:900 1rem Rubik;cursor:pointer;box-shadow:0 0 14px rgba(92,200,255,.4)}
+.ll:disabled{opacity:.3;filter:grayscale(1);cursor:not-allowed}
+.ll.used{position:relative}
+.ll.used::after{content:"✕";position:absolute;inset:0;display:grid;place-items:center;color:var(--bad);font-size:2rem}
+.prize-strip{display:none;text-align:center;margin-bottom:10px}
+.show-q .qcard{background:linear-gradient(165deg,#2a0f52,#160634);border:2px solid #7b3fe4;box-shadow:0 0 40px rgba(123,63,228,.45)}
+.show-q .opt{background:linear-gradient(90deg,#1f0c48,#3a1580);border-color:#7b3fe4;clip-path:polygon(3% 0,97% 0,100% 50%,97% 100%,3% 100%,0 50%);padding-inline:28px}
+.show-q .opt.sel{background:linear-gradient(90deg,#ff9f43,#ffcf4a);color:#1b1030;animation:pulse .5s infinite alternate}
+.show-q .opt.ok{background:linear-gradient(90deg,#16a06a,#2fd889);color:#fff;animation:none}
+.show-q .opt.bad{background:linear-gradient(90deg,#a3203a,#ff5e7a);color:#fff}
+.million .qcard{border-color:var(--gold);box-shadow:0 0 60px rgba(255,207,74,.55)}
+
+/* ---------- speed ---------- */
+.speed-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.ring{position:relative;width:86px;height:86px}
+.ring svg{transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font:400 1.9rem "Secular One"}
+.score{font:400 2.4rem "Secular One";color:var(--gold);text-shadow:0 0 20px rgba(255,207,74,.5)}
+.mult{font-weight:900;color:var(--pink)}
+.flash-ok{animation:fok .4s}.flash-bad{animation:fbad .4s}
+@keyframes fok{50%{box-shadow:inset 0 0 0 9999px rgba(47,216,137,.15)}}
+@keyframes fbad{50%{box-shadow:inset 0 0 0 9999px rgba(255,94,122,.18)}}
+
+/* ---------- cards ---------- */
+.flip{perspective:1200px;max-width:520px;margin:0 auto;height:300px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.flip.on .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:26px;display:grid;place-items:center;padding:24px;text-align:center;border:2px solid rgba(255,255,255,.2)}
+.face.f{background:linear-gradient(160deg,#7b3fe4,#3a1580);font:400 2.2rem "Secular One"}
+.face.b{background:linear-gradient(160deg,#ff7ad9,#8d2479);transform:rotateY(180deg);font-size:1.3rem;font-weight:700}
+.face small{display:block;font:500 .9rem Rubik;opacity:.75;margin-top:10px}
+.card-actions{display:flex;gap:12px;justify-content:center;margin-top:20px}
+
+@media(max-width:820px){.modes{grid-template-columns:1fr}.lgrid{grid-template-columns:1fr}.ladder{display:none}.prize-strip{display:block}}
+</style>
+</head>
+<body>
+<div class="stage-lights"><div class="beam b1"></div><div class="beam b2"></div></div>
+<main id="app"></main>
+
+<script src="../shared/progress.js"></script>
+<script src="../shared/sound.js"></script>
+<script src="../shared/ui.js"></script>
+<script src="../shared/book.js"></script>
+<script src="../shared/engine.js"></script>
+<script src="../shared/lesson.js"></script>
+<script src="content.js"></script>
+<script src="book.js"></script>
+<script src="phrases.js"></script>
+<script src="lessons.js"></script>
+<script>
+const SID = GEO.id, Q = GEO.questions, T = GEO.topics;
+const { $, esc, shuffle } = UI;
+Sound.config({ base: 'audio/', texts: GEO_PHRASES });
+Engine.setTopics(T);
+UI.topbar({ title: '🎤 רוני שואו', back: 'index.html', extra: `<span class="chip">🪙 <span id="hCoins">0</span></span>` });
+UI.stars();
+const G = Store.game(SID, 'show', { bestStep: 0, won: false, speedBest: 0, plays: 0 });
+const LS = Store.game(SID, 'lessons', {});
+const PRIZES = [100, 200, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000, 250000, 1000000];
+const SAFE = [3, 7];
+const fmt = n => n.toLocaleString('he-IL');
+const app = $('#app');
+const coins = () => $('#hCoins').textContent = Store.data.profile.coins;
+const bulbs = n => `<div class="bulbs">${'<i></i>'.repeat(n)}</div>`;
+
+/* ================= MENU ================= */
+const keep = r => Store.setResume({ page: 'show', ...r });
+const byId = id => Q.find(q => q.id === id);
+
+function menu() {
+  Sound.stop(); coins(); Store.clearResume('show');
+  app.innerHTML = `<div class="view">${bulbs(14)}
+    <div class="neon">רוני שואו</div>
+    <div class="host">🎤</div>
+    <div class="sub">שעשועון הגאוגרפיה הגדול · פרק 1 "יוצאים לדרך"</div>
+    <div class="modes">
+      <button class="mode learn" data-m="backstage"><span class="e">🎭📚</span><div><h3>חדר החזרות: לומדים לפני השואו</h3>
+        <p>המנחה מלמדת את כל החומר בשיעורים אינטראקטיביים: האטלס, שימושי המפה, מפות עתיקות, שלבי הכנת מפה ומושגים.</p></div><span class="chip">📖 ${Object.keys(LS).filter(k => LS[k]).length}/5</span></button>
+      <button class="mode main" data-m="ladder">${G.won ? '<span class="won">🏆 מיליונרית!</span>' : ''}<span class="e">🪜💰</span><h3>המסע למיליון</h3>
+        <p>12 שאלות, 3 גלגלי הצלה ו־2 נקודות ביטחון. ענית נכון על שאלת המיליון? ניצחת במשחק!</p><span class="chip">🏅 שיא: שלב ${G.bestStep}/12</span></button>
+      <button class="mode" data-m="speed"><span class="e">⚡⏱️</span><h3>סבב בזק</h3>
+        <p>60 שניות, כמה שיותר תשובות נכונות. רצף תשובות מכפיל את הנקודות!</p><span class="chip">🏆 שיא: ${G.speedBest}</span></button>
+      <button class="mode" data-m="cards"><span class="e">🃏✨</span><h3>כרטיסיות</h3>
+        <p>מושג בצד אחד והגדרה בצד השני. הכרטיסים שקשים לך יחזרו יותר.</p><span class="chip">10 כרטיסים</span></button>
+    </div>${bulbs(14)}</div>`;
+  app.querySelectorAll('.mode').forEach(b => b.onclick = () => { Sound.sfx('whoosh'); ({ ladder, speed, cards, backstage })[b.dataset.m]() });
+}
+
+/* ================= BACKSTAGE (lessons) ================= */
+function backstage(quiet) {
+  Sound.stop(); keep({ view: 'backstage' });
+  app.innerHTML = `<div class="view">${bulbs(14)}
+    <div class="neon" style="font-size:clamp(2.2rem,8vw,3.6rem)">חדר החזרות</div>
+    <div class="sub">בחרי נושא, והמנחה תלמד אותך הכול לפני שעולים לבמה 🎭</div>
+    <div class="topics">${T.map(t => `<button class="tbtn" data-t="${t.id}" style="--c:${t.color}">${LS[t.id] ? '<span class="ok">✅</span>' : ''}<span class="e">${t.emoji}</span>${t.name}</button>`).join('')}</div>
+    <div style="text-align:center;margin-top:20px"><button class="btn ghost" id="toStudio">🎤 חזרה לאולפן</button></div></div>`;
+  if (!quiet) Sound.say('backstage_intro');
+  $('#toStudio').onclick = menu;
+  app.querySelectorAll('.tbtn').forEach(b => b.onclick = () => openLesson(b.dataset.t));
+}
+
+function openLesson(tid, rs) {
+    const t = T.find(x => x.id === tid);
+    Sound.sfx('whoosh');
+    Lesson.play(GEO_LESSONS[tid], { tid, skin: 'show', questions: Q, startAt: rs?.idx || 0, seen: rs?.seen || [],
+      onProgress: (idx, seen) => keep({ view: 'lesson', tid, idx, seen }),
+      onExit: () => backstage(true), onDone: () => {
+      const first = !LS[tid];
+      LS[tid] = true; Store.save(); if (first) Store.addCoins(30); coins();
+      backstage(true); Sound.stop(); setTimeout(() => Sound.say('lesson_done'), 300);
+      const left = T.filter(x => !LS[x.id]);
+      UI.modal({ emoji: '🎓', title: 'השיעור הושלם!', dismiss: false,
+        html: `<p style="font-size:1.15rem">למדת את <b style="color:${t.color}">${t.emoji} ${t.name}</b>!</p>${first ? '<p>🪙 +30</p>' : ''}${left.length ? `<p class="muted">נשארו ${left.length} שיעורים</p>` : '<p>🌟 סיימת את כל השיעורים! הגיע הזמן לעלות לבמה!</p>'}`,
+        actions: left.length ? [{ label: `${left[0].emoji} לשיעור הבא ⟵`, onClick: () => openLesson(left[0].id) }, { label: '🎤 לאולפן', cls: 'ghost', onClick: menu }]
+          : [{ label: '🪜 למסע למיליון!', onClick: () => ladder() }, { label: '🎤 לאולפן', cls: 'ghost', onClick: menu }] });
+    } });
+}
+
+/* ================= LADDER ================= */
+function ladder(rs) {
+  const used = new Set(rs ? rs.qids : []);
+  const isQuick = q => q.k === 'mc' || q.k === 'tf';
+  const tier = s => s < 4 ? (q => q.d === 1 && isQuick(q)) : s < 8 ? (q => q.d === 2 && q.k === 'mc') : s < 11 ? (q => q.d >= 2 && q.k === 'mc') : (q => ['order', 'match', 'sort'].includes(q.k));
+  const draw1 = s => { const [q] = Engine.pick(Q, 1, SID, tier(s), used); used.add(q.id); return q; };
+  const qs = rs ? rs.qids.map(byId) : PRIZES.map((_, s) => draw1(s));
+  let step = rs?.step || 0, busy = false, ctrl = null;
+  const ll = rs?.ll || { fifty: true, book: true, swap: true };
+  const save = () => keep({ view: 'ladder', qids: qs.map(q => q.id), step, ll });
+  if (!rs) { G.plays++; Store.save(); }
+  save();
+
+  app.innerHTML = `<div class="view"><div class="lgrid">
+      <div><div class="prize-strip"></div>
+        <div class="lifelines">
+          <button class="ll" data-l="fifty" title="50:50">50:50</button>
+          <button class="ll" data-l="book" title="הציצי בספר">📖</button>
+          <button class="ll" data-l="swap" title="החלפת שאלה">🔄</button>
+        </div>
+        <div id="qhost" class="show-q"></div></div>
+      <div class="ladder" id="ladder"></div></div></div>`;
+  const drawLadder = () => {
+    const cur = Math.min(step, 11);
+    $('#ladder').innerHTML = PRIZES.map((p, i) => `<div class="rung ${SAFE.includes(i) ? 'safe' : ''} ${i < step ? 'done' : ''} ${i === step ? 'cur' : ''} ${i === 11 ? 'top' : ''}"><span>${i + 1}</span><span>${SAFE.includes(i) ? '🛡️ ' : ''}${fmt(p)}</span></div>`).join('');
+    app.querySelector('.prize-strip').innerHTML = `<span class="chip">שאלה ${cur + 1}/12</span> <span class="chip" style="color:var(--gold)">💰 על ${fmt(PRIZES[cur])}</span> ${step ? `<span class="chip">✔ ${fmt(PRIZES[step - 1])}</span>` : ''}`;
+    app.querySelectorAll('.ll').forEach(b => { b.disabled = !ll[b.dataset.l] || busy || step > 11 || (b.dataset.l === 'fifty' && qs[cur].k !== 'mc') || (step === 11 && b.dataset.l !== 'swap'); b.classList.toggle('used', !ll[b.dataset.l]); });
+  };
+  const safeAmount = () => step > 7 ? PRIZES[7] : step > 3 ? PRIZES[3] : 0;
+
+  const ask = () => {
+    busy = false; drawLadder();
+    const q = qs[step], host = $('#qhost'), million = step === 11;
+    host.classList.toggle('million', million);
+    const go = () => {
+      ctrl = Engine.render(host, q, {
+        label: million ? '👑 שאלת המיליון' : `💰 ${fmt(PRIZES[step])}`, read: million ? false : undefined,
+        manual: true,
+        onPick: () => {
+          busy = true; drawLadder();
+          if (step >= 7) Sound.say('final_answer'); Sound.sfx('drum');
+          setTimeout(() => ctrl.reveal(), step >= 7 ? 2400 : 1300);
+        },
+        onResult: res => {
+          busy = true; drawLadder();
+          Store.record(SID, q.id, res.correct);
+          if (res.correct) {
+            step++;
+            Store.addCoins(5 + step * 2); coins();
+            UI.floater('💰 ' + fmt(PRIZES[step - 1]), innerWidth / 2 - 60, innerHeight / 3);
+            G.bestStep = Math.max(G.bestStep, step); Store.save(); save();
+            if (step === 12) return win();
+            const safe = SAFE.includes(step - 1);
+            Engine.feedback(host, q, res, { silent: safe, nextLabel: step === 11 ? '👑 לשאלת המיליון' : 'לשאלה הבאה ⟵', onNext: ask });
+            if (safe) { Sound.sfx('fanfare'); setTimeout(() => Sound.say('safe_point'), 500); }
+            drawLadder();
+          } else {
+            G.bestStep = Math.max(G.bestStep, step); Store.save(); Store.clearResume('show');
+            Engine.feedback(host, q, res, { nextLabel: 'סיום', onNext: lose });
+          }
+        }
+      });
+    };
+    if (million) {
+      Sound.sfx('drum');
+      UI.modal({ emoji: '👑', title: 'שאלת המיליון!', html: '<p>זו השאלה האחרונה. תשובה נכונה, ואת מנצחת ברוני שואו!</p>', dismiss: false, actions: [{ label: 'אני מוכנה! ✨', onClick: go }] });
+      setTimeout(() => Sound.say('million_q'), 900);
+    } else go();
+  };
+
+  app.querySelectorAll('.ll').forEach(b => b.onclick = () => {
+    const l = b.dataset.l; if (!ll[l] || busy) return;
+    ll[l] = false; Sound.sfx('pop'); save();
+    if (l === 'fifty') { ctrl.fiftyFifty(); Sound.say('ll_5050'); }
+    if (l === 'book') {
+      const q = qs[step], t = T.find(t => t.id === q.t);
+      Sound.say('ll_book');
+      UI.modal({ emoji: '📖', title: 'הציצי בספר', html: `<p style="font-size:1.2rem">התשובה נמצאת בנושא <b style="color:${t.color}">${t.emoji} ${t.name}</b></p><p style="font-size:1.6rem;font-family:'Secular One'">עמוד ${q.p || '?'}</p>${Book.parse(q.p).length ? `<img src="${BOOK.base}p${Book.parse(q.p)[0]}.jpg" alt="" data-book="${q.p}" onerror="this.remove()" style="max-width:180px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.4);cursor:zoom-in;margin-bottom:8px"><br>${Book.chip(q.p, `לפתוח את עמ' ${q.p}`)}` : ''}<p class="muted">פתחי את הספר או את המחברת, וחפשי!</p>`, actions: [{ label: 'מצאתי! 👍' }] });
+    }
+    if (l === 'swap') { qs[step] = draw1(step); save(); Sound.say('ll_swap'); ask(); return; }
+    drawLadder();
+  });
+
+  const lose = () => {
+    Store.clearResume('show'); Sound.sfx('lose');
+    setTimeout(() => Sound.say('ladder_lose'), 700);
+    UI.modal({ emoji: '😮', title: 'המשחק נגמר', dismiss: false,
+      html: `<p style="font-size:1.2rem">הגעת לשלב <b>${step + 1}</b> מתוך 12!</p><p>יוצאת עם <b style="color:var(--gold)">${fmt(safeAmount())}</b> נקודות 🛡️</p><p class="muted">השיא שלך: שלב ${G.bestStep}/12</p>`,
+      actions: [{ label: '🔁 משחק חדש', onClick: () => ladder() }, { label: '🎤 לאולפן', cls: 'ghost', onClick: menu }] });
+  };
+  const win = () => {
+    Store.clearResume('show');
+    const first = !G.won;
+    G.won = true; Store.save();
+    if (first) Store.addCoins(200);
+    coins(); drawLadder();
+    Sound.sfx('fanfare'); UI.confetti(160); setTimeout(() => Sound.sfx('applause'), 800);
+    setTimeout(() => Sound.say('million_win'), 1200);
+    UI.modal({ emoji: '🏆', title: 'מיליונרית של מפות!', dismiss: false,
+      html: `<p style="font-size:1.3rem">ענית נכון על כל 12 השאלות, כולל שאלת המיליון!</p><p style="font:400 2.4rem 'Secular One';color:var(--gold)">💰 1,000,000</p>${first ? '<p>🪙 +200 מטבעות</p>' : ''}<p class="muted">ניצחת ברוני שואו!</p>`,
+      actions: [{ label: '🎓 למבחן הגמר', onClick: () => location.href = 'exam.html' }, { label: '🎤 לאולפן', cls: 'ghost', onClick: menu }] });
+  };
+
+  if (rs) ask(); else Sound.say('ladder_intro', ask);
+}
+
+/* ================= SPEED ================= */
+function speed(rs) {
+  const pool = rs ? rs.pool.map(byId) : Engine.byDifficulty(shuffle(Q.filter(q => q.k === 'mc' || q.k === 'tf')));
+  let { idx = 0, score = 0, streak = 0, best = 0, left = 60 } = rs || {}, timer, over = false;
+  const save = () => keep({ view: 'speed', pool: pool.map(q => q.id), idx: Math.max(0, idx - 1), score, streak, best, left });
+  const C = 2 * Math.PI * 38;
+  app.innerHTML = `<div class="view"><div class="speed-head">
+      <div class="ring"><svg width="86" height="86"><circle cx="43" cy="43" r="38" stroke="rgba(255,255,255,.15)" stroke-width="8" fill="none"/><circle id="arc" cx="43" cy="43" r="38" stroke="#ffcf4a" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg><b id="sec">${left}</b></div>
+      <div style="text-align:center"><div class="score" id="sc">${score}</div><div class="mult" id="mu">×1</div></div>
+      <div class="chip">🔥 <span id="stk">${streak}</span></div></div>
+    <div id="qhost" class="show-q"></div></div>`;
+  const mult = () => Math.min(4, 1 + Math.floor(streak / 3));
+  const next = () => {
+    if (over) return;
+    const q = pool[idx++ % pool.length], host = $('#qhost');
+    Engine.render(host, q, { read: false, onResult: res => {
+      Store.record(SID, q.id, res.correct);
+      const view = app.querySelector('.view');
+      view.classList.remove('flash-ok', 'flash-bad'); void view.offsetWidth;
+      if (res.correct) {
+        streak++; best = Math.max(best, streak); score += 10 * mult(); Sound.sfx('correct');
+        if (streak === 5) Sound.say('streak5'); else if (streak % 3 === 0) Sound.sfx('star');
+        view.classList.add('flash-ok');
+      } else { streak = 0; Sound.sfx('wrong'); view.classList.add('flash-bad'); }
+      $('#sc').textContent = score; $('#mu').textContent = '×' + mult(); $('#stk').textContent = streak;
+      idx++; save(); idx--;
+      setTimeout(next, res.correct ? 450 : 1100);
+    } });
+  };
+  const end = () => {
+    over = true; clearInterval(timer); Store.clearResume('show');
+    const rec = score > G.speedBest;
+    if (rec) { G.speedBest = score; Store.save(); }
+    Store.addCoins(Math.floor(score / 10)); coins();
+    Sound.sfx(rec ? 'fanfare' : 'applause'); if (rec) UI.confetti();
+    Sound.say('speed_end', () => rec && Sound.say('speed_record'));
+    UI.modal({ emoji: rec ? '🏆' : '⏱️', title: rec ? 'שיא חדש!' : 'הזמן נגמר!', dismiss: false,
+      html: `<p style="font:400 3rem 'Secular One';color:var(--gold);margin:0">${score}</p><p>רצף הכי ארוך: 🔥 ${best} · השיא שלך: ${G.speedBest}</p><p>🪙 +${Math.floor(score / 10)}</p>`,
+      actions: [{ label: '⚡ שוב', onClick: () => speed() }, { label: '🎤 לאולפן', cls: 'ghost', onClick: menu }] });
+  };
+  const go = () => {
+    next(); save();
+    $('#arc').style.strokeDashoffset = C * (1 - left / 60);
+    timer = setInterval(() => {
+      left--; $('#sec').textContent = left; save();
+      $('#arc').style.strokeDashoffset = C * (1 - left / 60);
+      if (left <= 10) { Sound.sfx('tick'); $('#arc').setAttribute('stroke', '#ff5e7a'); }
+      if (left <= 0) end();
+    }, 1000);
+  };
+  if (rs) go(); else Sound.say('speed_intro', go);
+}
+
+/* ================= CARDS ================= */
+function cards(rs) {
+  const deck = Q.filter(q => q.k === 'match').flatMap(q => q.pairs.map((p, i) => ({ id: `c_${q.id}_${i}`, f: p[0], b: p[1], t: q.t })));
+  const uniq = [...new Map(deck.map(c => [c.f + '|' + c.b, c])).values()];
+  const session = rs ? rs.ids.map(id => uniq.find(c => c.id === id)).filter(Boolean)
+    : uniq.map(c => ({ c, w: Store.box(SID, c.id) + Math.random() * 2 })).sort((a, b) => a.w - b.w).slice(0, 10).map(x => x.c).sort((a, b) => a.b.length - b.b.length);
+  let i = rs?.i || 0, know = rs?.know || 0;
+  if (!rs) Sound.say('cards_intro');
+  const show = () => {
+    keep({ view: 'cards', ids: session.map(c => c.id), i, know });
+    if (i >= session.length) {
+      Store.clearResume('show');
+      Sound.sfx('fanfare'); UI.confetti(60); Store.addCoins(know * 3); coins();
+      setTimeout(() => Sound.say('cards_done'), 500);
+      return UI.modal({ emoji: '🃏', title: 'סיימת את החבילה!', dismiss: false, html: `<p style="font-size:1.3rem">ידעת <b>${know}</b> מתוך ${session.length}</p><p>🪙 +${know * 3}</p>`,
+        actions: [{ label: '🃏 חבילה חדשה', onClick: () => cards() }, { label: '🎤 לאולפן', cls: 'ghost', onClick: menu }] });
+    }
+    const c = session[i], t = T.find(t => t.id === c.t);
+    app.innerHTML = `<div class="view">
+      <p style="text-align:center"><span class="chip">${i + 1} / ${session.length}</span> <span class="chip" style="color:${t.color}">${t.emoji} ${t.name}</span></p>
+      <div class="flip" id="flip"><div class="inner">
+        <div class="face f"><div>${esc(c.f)}<small>👆 לחצי כדי להפוך</small></div></div>
+        <div class="face b"><div>${esc(c.b)}</div></div></div></div>
+      <div class="card-actions hidden" id="ca"><button class="btn mint" data-k="1">✔ ידעתי</button><button class="btn ghost" data-k="0">✘ עוד לא</button></div></div>`;
+    setTimeout(() => Sound.say(c.id + '_f', c.f), 200);
+    $('#flip').onclick = () => {
+      const f = $('#flip'); f.classList.toggle('on'); Sound.sfx('whoosh');
+      if (f.classList.contains('on')) { Sound.say(c.id + '_b', c.b); $('#ca').classList.remove('hidden'); }
+    };
+    app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+      const ok = b.dataset.k === '1';
+      Store.record(SID, c.id, ok); if (ok) know++;
+      Sound.sfx(ok ? 'correct' : 'pop'); i++; show();
+    });
+  };
+  show();
+}
+
+const RS = Store.getResume('show');
+if (RS) {
+  try {
+    ({ backstage: () => backstage(true), lesson: () => { backstage(true); openLesson(RS.tid, RS); }, ladder: () => ladder(RS), speed: () => speed(RS), cards: () => cards(RS) })[RS.view]();
+    UI.toast('ממשיכים מאיפה שעצרת ✨');
+  } catch (e) { menu(); }
+} else menu();
+if (!RS) UI.gate({ title: 'רוני שואו', sub: 'שעשועון הגאוגרפיה הגדול 🎤', emoji: '🎤', once: 'show-gate', onStart: fresh => { if (fresh) { Sound.sfx('fanfare'); setTimeout(() => Sound.say('show_intro'), 700); } } });
+</script>
+</body>
+</html>

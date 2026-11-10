@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מבחן חזרה גמר</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<link rel="stylesheet" href="../shared/theme.css">
+<style>
+.view{max-width:800px;margin:0 auto;padding:20px 16px calc(50px + var(--safe-b))}
+.paper{background:linear-gradient(160deg,#1e2660,#141a3a);border:1px solid var(--line);border-radius:28px;padding:26px}
+.title-xl{font-size:clamp(2.2rem,7vw,3.4rem);background:linear-gradient(100deg,var(--mint),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rules{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+.rule{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center}
+.rule .e{font-size:1.6rem}
+.hist{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ehead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.ehead .sec{font:400 1.15rem "Secular One";flex:1}
+.navdots{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.navdots button{width:30px;height:30px;border-radius:9px;border:2px solid var(--line);background:var(--card);color:var(--muted);font:700 .8rem Rubik;cursor:pointer}
+.navdots button.ans{background:rgba(92,200,255,.25);color:var(--ink);border-color:rgba(92,200,255,.6)}
+.navdots button.cur{border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(255,207,74,.4)}
+.navdots .sep{width:2px;background:var(--line);margin:0 4px}
+.enav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+.part{display:inline-block;background:rgba(180,140,255,.18);color:var(--violet);padding:4px 12px;border-radius:99px;font-weight:700;font-size:.85rem}
+.bigscore{font:400 clamp(5rem,22vw,8rem) "Secular One";line-height:1;text-align:center;background:linear-gradient(180deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(255,207,74,.4))}
+.topicbars{display:grid;gap:12px;margin:20px 0}
+.tb label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:4px}
+.rv{border-radius:18px;padding:16px;margin-bottom:12px;border:1px solid var(--line);background:var(--card)}
+.rv.ok{border-color:rgba(47,216,137,.5)}.rv.bad{border-color:rgba(255,94,122,.5)}.rv.half{border-color:rgba(255,207,74,.5)}
+.rv h4{margin:0 0 8px;font-size:1.05rem}
+.rv .row{margin:6px 0;font-size:.95rem}
+.rv .lbl{color:var(--muted);font-weight:700}
+.grade-q{font-size:1.2rem;font-weight:700;margin:6px 0 12px}
+.mine{background:#0e1335;border:1px solid var(--line);border-radius:14px;padding:12px;white-space:pre-wrap;min-height:50px}
+@media(max-width:560px){.rules{grid-template-columns:1fr}.paper{padding:18px}}
+</style>
+</head>
+<body>
+<main class="view" id="app"></main>
+
+<script src="../shared/progress.js"></script>
+<script src="../shared/sound.js"></script>
+<script src="../shared/ui.js"></script>
+<script src="../shared/book.js"></script>
+<script src="../shared/engine.js"></script>
+<script src="content.js"></script>
+<script src="book.js"></script>
+<script src="phrases.js"></script>
+<script>
+const SID = GEO.id, Q = GEO.questions, T = GEO.topics;
+const { $, esc, shuffle } = UI;
+Sound.config({ base: 'audio/', texts: GEO_PHRASES });
+Engine.setTopics(T);
+UI.topbar({ title: '🎓 מבחן חזרה גמר', back: 'index.html' });
+UI.stars();
+const S = Store.subject(SID);
+const G = Store.game(SID, 'exam', { draft: null });
+const app = $('#app');
+const byId = id => Q.find(q => q.id === id);
+const PTS = 5;
+
+/* ---------- build an exam: 16 objective (part A) + 4 open (part B) ---------- */
+function build() {
+  const used = new Set(), A = [];
+  const take = (pool, n, f) => { const r = Engine.pick(pool, n, null, f, used); r.forEach(q => used.add(q.id)); return r; };
+  for (const t of T) {
+    const pool = Q.filter(q => q.t === t.id && q.k !== 'open');
+    if (t.id === 'terms') { A.push(...take(pool, 4)); continue; }
+    const inter = take(pool, 1, q => ['order', 'sort', 'match'].includes(q.k));
+    A.push(...inter, ...take(pool, 3 - inter.length, q => q.k === 'mc' || q.k === 'tf'));
+  }
+  const B = ['atlas', 'uses', 'oldnew', 'stages'].map(tid => take(Q.filter(q => q.t === tid && q.k === 'open'), 1)[0]).filter(Boolean);
+  return { ids: [...Engine.byDifficulty(A).map(q => q.id), ...Engine.byDifficulty(B).map(q => q.id)], partA: A.length, answers: {}, start: Date.now(), cur: 0 };
+}
+
+/* ================= INTRO ================= */
+function intro() {
+  Sound.stop(); Store.clearResume('exam');
+  const best = S.exams.reduce((a, e) => Math.max(a, e.score), 0);
+  app.innerHTML = `<div class="paper" style="text-align:center">
+    <span class="bigemoji">🎓</span>
+    <h1 class="title-xl">מבחן חזרה גמר</h1>
+    <p class="muted" style="font-size:1.1rem">חזרה גנרלית לפני המבחן ביום חמישי. כל הנושאים, כמו במבחן אמיתי.</p>
+    <div class="rules" style="text-align:right">
+      <div class="rule"><span class="e">📝</span><div><b>20 שאלות</b><br><span class="muted">16 שאלות סגורות ו־4 שאלות פתוחות</span></div></div>
+      <div class="rule"><span class="e">🤫</span><div><b>בלי רמזים</b><br><span class="muted">רואים את התשובות רק בסוף</span></div></div>
+      <div class="rule"><span class="e">↔️</span><div><b>אפשר לחזור</b><br><span class="muted">לדלג ולחזור לכל שאלה לפני ההגשה</span></div></div>
+      <div class="rule"><span class="e">💯</span><div><b>ציון מ־100</b><br><span class="muted">5 נקודות לכל שאלה, ופירוט לפי נושאים</span></div></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      ${G.draft ? `<button class="btn mint big" id="resume">▶ המשך את המבחן (${G.draft.ids.filter(id => Engine.isComplete(byId(id), G.draft.answers[id])).length}/20)</button>` : ''}
+      <button class="btn ${G.draft ? 'ghost' : 'mint'} big" id="start">${G.draft ? 'מבחן חדש' : 'להתחיל! 🚀'}</button>
+    </div>
+    ${S.exams.length ? `<div class="hist" style="justify-content:center"><span class="chip">🏅 הכי גבוה: ${best}</span>${S.exams.slice(-5).reverse().map(e => `<span class="chip">${new Date(e.at).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} · ${e.score}</span>`).join('')}</div>` : ''}
+  </div>`;
+  $('#start').onclick = () => { G.draft = build(); Store.save(); Sound.sfx('whoosh'); Sound.say('exam_intro'); exam(); };
+  if ($('#resume')) $('#resume').onclick = () => { Sound.sfx('whoosh'); exam(); };
+}
+
+/* ================= EXAM ================= */
+let tick;
+function exam() {
+  const D = G.draft, n = D.ids.length;
+  D.phase = 'exam'; Store.setResume({ page: 'exam' });
+  clearInterval(tick);
+  const draw = () => {
+    const i = D.cur, q = byId(D.ids[i]), partB = i >= D.partA;
+    app.innerHTML = `<div class="ehead"><span class="part">${partB ? 'חלק ב · שאלות פתוחות' : 'חלק א · שאלות סגורות'}</span>
+        <span class="sec">שאלה ${i + 1} מתוך ${n}</span><span class="chip">⏱️ <span id="clock"></span></span></div>
+      <div class="navdots">${D.ids.map((id, k) => `${k === D.partA ? '<span class="sep"></span>' : ''}<button data-k="${k}" class="${Engine.isComplete(byId(id), D.answers[id]) ? 'ans' : ''} ${k === i ? 'cur' : ''}">${k + 1}</button>`).join('')}</div>
+      <div id="qhost"></div>
+      <div class="enav">
+        <button class="btn ghost" id="prev" ${i === 0 ? 'disabled' : ''}>→ הקודמת</button>
+        ${i === n - 1 ? '<button class="btn mint" id="submit">📤 הגשת המבחן</button>' : '<button class="btn" id="next">הבאה ←</button>'}
+      </div>`;
+    Engine.render($('#qhost'), q, { mode: 'exam', read: false, answer: D.answers[q.id], label: `${PTS} נק׳`, onChange: a => {
+      D.answers[q.id] = a; Store.save();
+      app.querySelector(`.navdots [data-k="${i}"]`).classList.toggle('ans', Engine.isComplete(q, a));
+    } });
+    app.querySelectorAll('.navdots button').forEach(b => b.onclick = () => go(+b.dataset.k));
+    $('#prev').onclick = () => go(i - 1);
+    if ($('#next')) $('#next').onclick = () => go(i + 1);
+    if ($('#submit')) $('#submit').onclick = submit;
+    clock();
+  };
+  const go = k => { Sound.stop(); Sound.sfx('tap'); D.cur = Math.max(0, Math.min(n - 1, k)); Store.save(); draw(); scrollTo({ top: 0, behavior: 'smooth' }); };
+  const clock = () => { const s = Math.floor((Date.now() - D.start) / 1000); const c = $('#clock'); if (c) c.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  tick = setInterval(clock, 1000);
+  draw();
+}
+
+function submit() {
+  const D = G.draft;
+  const missing = D.ids.filter(id => !Engine.isComplete(byId(id), D.answers[id])).length;
+  const doIt = () => { clearInterval(tick); Sound.sfx('whoosh'); D.secs = Math.floor((Date.now() - D.start) / 1000); Store.save(); gradeOpen(0); };
+  if (missing) UI.confirmBox('להגיש את המבחן?', `<p>יש עוד <b>${missing}</b> שאלות שלא נענו עד הסוף.</p>`, '📤 להגיש בכל זאת', doIt);
+  else UI.confirmBox('להגיש את המבחן?', '<p class="muted">אחרי ההגשה אי אפשר לשנות תשובות.</p>', '📤 להגיש', doIt);
+}
+
+/* ================= SELF-GRADE OPEN QUESTIONS ================= */
+function gradeOpen(k) {
+  const D = G.draft;
+  const fresh = D.phase !== 'grade';
+  D.phase = 'grade'; D.gk = k; Store.setResume({ page: 'exam' });
+  const open = D.ids.filter(id => byId(id).k === 'open');
+  if (k === 0 && fresh) Sound.say('exam_open');
+  if (k >= open.length) return results();
+  const q = byId(open[k]), a = D.answers[q.id] || { text: '' };
+  const hits = Engine.keywordHits(q, a.text);
+  app.innerHTML = `<div class="paper">
+    <span class="part">בדיקת שאלה פתוחה ${k + 1} מתוך ${open.length}</span>
+    <div class="grade-q">${esc(q.q)}</div>
+    <div class="lbl muted" style="font-weight:700;margin-bottom:4px">✍️ התשובה שלי:</div>
+    <div class="mine">${a.text ? esc(a.text) : '<i class="muted">לא נכתבה תשובה</i>'}</div>
+    <div class="model"><h4>✨ תשובה לדוגמה <button class="icon-btn" style="display:inline-grid;width:34px;height:34px;font-size:1rem;vertical-align:middle" id="sayM">🔊</button></h4>${esc(q.model)}
+      <div style="margin-top:10px"><b>מילות מפתח:</b> ${hits.map(h => `<span class="kw ${h.hit ? 'hit' : ''}">${h.hit ? '✔ ' : ''}${esc(h.label)}</span>`).join('')}</div></div>
+    <p style="font-weight:700;margin:16px 0 6px">כמה מהתשובה לדוגמה כתבתי? (בכנות 😉)</p>
+    <div class="selfgrade">
+      <button class="btn mint" data-g="1">💯 הכול (5 נק׳)</button>
+      <button class="btn" data-g=".5">🤏 חלק (2.5 נק׳)</button>
+      <button class="btn ghost" data-g="0">✘ כמעט כלום (0)</button>
+    </div></div>`;
+  $('#sayM').onclick = () => Sound.say(q.id + '_m', q.model);
+  if (!a.text) app.querySelectorAll('[data-g]').forEach(b => { if (b.dataset.g !== '0') b.disabled = true; });
+  app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => {
+    D.answers[q.id] = { ...a, grade: +b.dataset.g }; Store.save(); Sound.sfx('tap'); gradeOpen(k + 1);
+  });
+}
+
+/* ================= RESULTS ================= */
+function results() {
+  const D = G.draft;
+  const rows = D.ids.map(id => { const q = byId(id), a = D.answers[id]; return { q, a, g: Engine.grade(q, a) }; });
+  const score = Math.round(rows.reduce((s, r) => s + r.g * PTS, 0));
+  const byTopic = Object.fromEntries(T.map(t => {
+    const rs = rows.filter(r => r.q.t === t.id);
+    return [t.id, rs.length ? Math.round(rs.reduce((s, r) => s + r.g, 0) / rs.length * 100) : null];
+  }));
+  rows.forEach(r => Store.record(SID, r.q.id, r.g === 1));
+  S.exams.push({ at: Date.now(), score, byTopic, secs: D.secs });
+  const done = D; G.draft = null; Store.addCoins(score); Store.clearResume('exam');
+
+  const voice = score >= 90 ? 'exam_great' : score >= 75 ? 'exam_good' : 'exam_ok';
+  const emoji = score >= 90 ? '🏆' : score >= 75 ? '🌟' : '💪';
+  const msg = score >= 90 ? 'מדהים! את מוכנה למבחן!' : score >= 75 ? 'יפה מאוד! עוד קצת חזרה ואת שם.' : 'עבודה טובה! בואי נעבור על הטעויות ונתרגל עוד.';
+  const weak = T.filter(t => byTopic[t.id] != null).sort((a, b) => byTopic[a.id] - byTopic[b.id])[0];
+
+  app.innerHTML = `<div class="paper" style="text-align:center">
+    <span class="bigemoji">${emoji}</span>
+    <div class="bigscore" id="num">0</div>
+    <h2 style="margin:6px 0">${msg}</h2>
+    <p class="muted">${rows.filter(r => r.g === 1).length} תשובות מלאות מתוך 20 · ⏱️ ${Math.floor(done.secs / 60)} דקות · 🪙 +${score}</p>
+    <div class="topicbars" style="text-align:right">${T.map(t => byTopic[t.id] == null ? '' : `<div class="tb" style="--c:${t.color}"><label><span>${t.emoji} ${t.name}</span><span style="color:${t.color}">${byTopic[t.id]}%</span></label><div class="bar"><i data-w="${byTopic[t.id]}"></i></div></div>`).join('')}</div>
+    ${weak && byTopic[weak.id] < 100 ? `<p>💡 כדאי לחזור על <b style="color:${weak.color}">${weak.emoji} ${weak.name}</b>. אפשר בארכיפלג, באי המתאים, או בים הטעויות.</p>` : ''}
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+      <button class="btn" id="review">🔍 סקירת תשובות</button>
+      <button class="btn mint" id="again">🔁 מבחן חדש</button>
+      <a class="btn ghost" href="index.html">🏠 לדף הבית</a>
+    </div></div><div id="rvlist" style="margin-top:18px"></div>`;
+
+  let c = 0; const step = Math.max(1, Math.ceil(score / 40));
+  const anim = setInterval(() => { c = Math.min(score, c + step); $('#num').textContent = c; if (c % 4 === 0) Sound.sfx('tick'); if (c >= score) { clearInterval(anim); finale(); } }, 30);
+  const finale = () => {
+    if (score >= 75) { Sound.sfx('fanfare'); UI.confetti(score >= 90 ? 160 : 70); if (score >= 90) setTimeout(() => Sound.sfx('applause'), 800); }
+    else Sound.sfx('star');
+    setTimeout(() => Sound.say(voice), 700);
+  };
+  setTimeout(() => app.querySelectorAll('.bar i').forEach(b => b.style.width = b.dataset.w + '%'), 300);
+  $('#again').onclick = () => { G.draft = build(); Store.save(); Sound.say('exam_intro'); exam(); };
+  $('#review').onclick = () => {
+    $('#rvlist').innerHTML = rows.map((r, k) => {
+      const cls = r.g === 1 ? 'ok' : r.g > 0 ? 'half' : 'bad';
+      return `<div class="rv ${cls}"><h4>${r.g === 1 ? '✅' : r.g > 0 ? '🟡' : '❌'} ${k + 1}. ${esc(r.q.q)}</h4>
+        <div class="row"><span class="lbl">התשובה שלי:</span><br>${Engine.answerHtml(r.q, r.a)}</div>
+        ${r.g < 1 ? `<div class="row"><span class="lbl">${r.q.k === 'open' ? 'תשובה לדוגמה' : 'התשובה הנכונה'}:</span><br>${Engine.correctHtml(r.q)}</div>` : ''}
+        ${r.q.x ? `<div class="row muted">💡 ${esc(r.q.x)}</div>` : ''}${r.q.p ? `<div class="row">${Book.chip(r.q.p, `לראות בספר: עמ' ${r.q.p}`) || `📖 עמ' ${r.q.p}`}</div>` : ''}</div>`;
+    }).join('');
+    $('#rvlist').scrollIntoView({ behavior: 'smooth' });
+  };
+}
+
+if (G.draft && Store.getResume('exam')) {
+  G.draft.phase === 'grade' ? gradeOpen(G.draft.gk || 0) : exam();
+  UI.toast('ממשיכים מאיפה שעצרת ✨');
+} else intro();
+</script>
+</body>
+</html>

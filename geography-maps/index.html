@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מסע אל עולם המפות</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+<link rel="stylesheet" href="../shared/theme.css">
+<style>
+.hero{padding:34px 0 10px;display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center}
+.hero h1{font-size:clamp(2.3rem,7vw,4.4rem);background:linear-gradient(100deg,var(--gold),var(--coral) 40%,var(--pink) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:1.15rem;color:var(--muted);margin:10px 0 18px}
+.cd{display:flex;gap:8px;flex-wrap:wrap}
+.cd .chip b{font-family:"Secular One";color:var(--gold);font-size:1.2rem;font-weight:400}
+.streak{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+
+.globe-stage{position:relative;aspect-ratio:1;max-width:300px;width:100%;margin-inline:auto}
+.globe{position:absolute;inset:10%;border-radius:50%;background:radial-gradient(circle at 32% 30%,#7fe0ff,#1d7bd8 45%,#0b2f74 80%);box-shadow:inset -26px -26px 50px rgba(0,0,0,.45),0 0 70px rgba(92,200,255,.45);overflow:hidden}
+.globe::before{content:"";position:absolute;inset:0;width:200%;background:
+ radial-gradient(ellipse 14% 20% at 10% 35%,#3ee8b5 60%,transparent 62%),radial-gradient(ellipse 9% 24% at 22% 62%,#3ee8b5 60%,transparent 62%),
+ radial-gradient(ellipse 16% 14% at 36% 30%,#5af0a0 60%,transparent 62%),radial-gradient(ellipse 8% 16% at 38% 58%,#ffcf4a 60%,transparent 62%),
+ radial-gradient(ellipse 14% 20% at 60% 35%,#3ee8b5 60%,transparent 62%),radial-gradient(ellipse 9% 24% at 72% 62%,#3ee8b5 60%,transparent 62%),
+ radial-gradient(ellipse 16% 14% at 86% 30%,#5af0a0 60%,transparent 62%),radial-gradient(ellipse 8% 16% at 88% 58%,#ffcf4a 60%,transparent 62%);animation:spin 14s linear infinite}
+@keyframes spin{to{transform:translateX(-50%)}}
+.orbit{position:absolute;inset:0;border:2px dashed rgba(255,255,255,.18);border-radius:50%;animation:rot 20s linear infinite}
+.orbit span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:1.8rem}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+h2.sec{font-size:1.7rem;margin:34px 0 14px}
+.path{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center;margin-top:22px}
+.pstep{border-radius:22px;padding:16px;text-align:center;border:2px solid var(--c);background:linear-gradient(160deg,color-mix(in srgb,var(--c) 22%,transparent),rgba(255,255,255,.02))}
+.pstep .e{font-size:2.4rem}
+.pstep b{display:block;font:400 1.25rem "Secular One";margin:2px 0}
+.pstep small{color:var(--muted)}
+.parrow{font-size:1.8rem;color:var(--gold)}
+.lessons-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.lessons-row .chip.ok{border-color:var(--ok);color:#b9ffdf}
+@media(max-width:700px){.path{grid-template-columns:1fr}.parrow{transform:rotate(-90deg);text-align:center}}
+.games{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.game{border-radius:28px;padding:24px;position:relative;overflow:hidden;border:1px solid var(--line);min-height:300px;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,box-shadow .2s;text-decoration:none;color:var(--ink)}
+.game:hover{transform:translateY(-4px)}
+.game .art{font-size:4.2rem;line-height:1;margin-bottom:10px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4))}
+.game h3{font-size:2rem}
+.game p{color:rgba(255,255,255,.82);margin:6px 0 14px}
+.game .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.game .stats .chip{background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.2)}
+.game .go{position:absolute;left:20px;bottom:20px}
+.game .won{position:absolute;top:16px;left:16px;font-size:.9rem;font-weight:900;background:var(--gold);color:#1b1030;padding:6px 12px;border-radius:99px;box-shadow:0 0 20px rgba(255,207,74,.6)}
+.g-arch{background:linear-gradient(160deg,#1478c8,#0b3d7a 55%,#0b2350);box-shadow:0 20px 50px rgba(20,120,200,.35)}
+.g-arch::after{content:"";position:absolute;inset:auto 0 0 0;height:70px;background:repeating-radial-gradient(circle at 50% 120%,rgba(255,255,255,.08) 0 10px,transparent 10px 22px);pointer-events:none}
+.g-show{background:radial-gradient(circle at 50% -10%,#ff7ad9,#6b1b8f 50%,#24083d);box-shadow:0 20px 50px rgba(255,122,217,.3)}
+.g-show .lights{position:absolute;top:10px;inset-inline:20px;display:flex;justify-content:space-between}
+.g-show .lights i{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:blink .8s infinite alternate}
+.g-show .lights i:nth-child(2n){animation-delay:.4s}
+@keyframes blink{to{opacity:.2}}
+
+.exam{margin-top:18px;border-radius:28px;padding:24px;background:linear-gradient(135deg,rgba(62,232,181,.16),rgba(180,140,255,.18));border:1px solid rgba(62,232,181,.45);display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;text-decoration:none;color:var(--ink)}
+.exam .art{font-size:4rem}
+.exam h3{font-size:1.8rem;color:var(--mint)}
+.req{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.req .chip.ok{border-color:var(--ok);color:#b9ffdf}
+
+.mastery{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.mastery .card{text-align:center;padding:16px 12px}
+.mastery .em{font-size:2rem}
+.mastery b{display:block;font:400 1.6rem "Secular One";margin:4px 0}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:30px 0 50px;justify-content:center}
+textarea.code{width:100%;min-height:90px;direction:ltr;font:12px ui-monospace,monospace;background:#0e1335;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px}
+@media(max-width:860px){.hero{grid-template-columns:1fr}.globe-stage{max-width:200px;grid-row:1}.games{grid-template-columns:1fr}.mastery{grid-template-columns:repeat(3,1fr)}.exam{grid-template-columns:1fr;text-align:center}.req{justify-content:center}}
+@media(max-width:520px){.mastery{grid-template-columns:repeat(2,1fr)}.game{min-height:260px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <span class="eyebrow">🎒 גאוגרפיה · פרק 1 "יוצאים לדרך" + האטלס</span>
+      <h1>מסע אל עולם המפות</h1>
+      <p>שלום <b style="color:var(--ink)">רוני</b> 🦄! בחרי משחק, צברי כוכבים, ובסוף עשי מבחן חזרה גמר.</p>
+      <div class="cd" id="cd"></div>
+      <div class="streak" id="streak"></div>
+    </div>
+    <div class="globe-stage" aria-hidden="true"><div class="orbit"><span>🛰️</span></div><div class="globe"></div></div>
+  </section>
+
+  <h2 class="sec">🗺️ איך זה עובד?</h2>
+  <div class="path">
+    <div class="pstep" style="--c:var(--sky)"><div class="e">📖</div><b>1. לומדים</b><small>בכל עולם יש שיעור אינטראקטיבי עם קריינות, לפני השאלות</small><div class="lessons-row" id="lessonsRow"></div></div>
+    <div class="parrow">⟵</div>
+    <div class="pstep" style="--c:var(--gold)"><div class="e">🎮</div><b>2. משחקים</b><small>מתרגלים בארכיפלג וברוני שואו, וצוברים כוכבים ומטבעות</small></div>
+    <div class="parrow">⟵</div>
+    <div class="pstep" style="--c:var(--mint)"><div class="e">🎓</div><b>3. מבחן גמר</b><small>חזרה גנרלית עם ציון, כמו במבחן האמיתי</small></div>
+  </div>
+
+  <h2 class="sec">🎮 בחרי משחק</h2>
+  <div class="games">
+    <a class="game g-arch" href="archipelago.html" id="gArch">
+      <div class="art">🏝️⛵</div>
+      <h3>ארכיפלג המפות</h3>
+      <p>מפליגים בין 5 איים, אחד לכל נושא. בכל אי: 📖 שיעור אינטראקטיבי, 3 שלבים ואתגר קפטן. בסוף מחכים המגדלור ושאלת הזהב!</p>
+      <div class="stats" id="sArch"></div>
+    </a>
+    <a class="game g-show" href="show.html" id="gShow">
+      <div class="lights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="art">🎤✨</div>
+      <h3>רוני שואו</h3>
+      <p>שעשועון טלוויזיה: 🎭 חדר חזרות עם שיעורים, המסע למיליון עם 12 שאלות וגלגלי הצלה, סבב בזק של 60 שניות, וכרטיסיות מושגים.</p>
+      <div class="stats" id="sShow"></div>
+    </a>
+  </div>
+
+  <a class="exam" href="exam.html">
+    <div class="art">🎓</div>
+    <div>
+      <h3>מבחן חזרה גמר</h3>
+      <div class="muted">20 שאלות מכל הנושאים, כולל שאלות פתוחות כמו במבחן האמיתי, וציון מ־100. מומלץ אחרי ששני המשחקים הושלמו.</div>
+      <div class="req" id="req"></div>
+    </div>
+    <span class="btn mint big">להתחיל ⟵</span>
+  </a>
+
+  <h2 class="sec">📖 מה יש בספר ואיפה</h2>
+  <p class="muted" style="margin-top:-6px">לחצי על שורה כדי לפתוח את העמוד מהספר</p>
+  <div class="bookmap" id="bookmap"></div>
+
+  <h2 class="sec">📈 כמה אני כבר יודעת</h2>
+  <div class="mastery" id="mastery"></div>
+
+  <div class="tools">
+    <button class="btn ghost sm" id="bBackup">💾 גיבוי התקדמות</button>
+    <button class="btn ghost sm" id="bRestore">📥 שחזור</button>
+    <button class="btn ghost sm" id="bReset">🗑️ איפוס</button>
+    <a class="btn ghost sm" href="../plans/geography.html">📄 התוכנית</a>
+    <a class="btn ghost sm" href="../index.html">🏫 האקדמיה</a>
+  </div>
+</main>
+
+<script src="../shared/progress.js"></script>
+<script src="../shared/sound.js"></script>
+<script src="../shared/ui.js"></script>
+<script src="../shared/book.js"></script>
+<script src="content.js"></script>
+<script src="book.js"></script>
+<script src="phrases.js"></script>
+<script>
+const SID = GEO.id;
+Sound.config({ base: 'audio/', texts: GEO_PHRASES });
+UI.topbar({ title: '🗺️ מסע אל עולם המפות', back: '../index.html', extra: `<span class="chip">🪙 <span id="coins">0</span></span>` });
+UI.stars();
+
+function countdown() {
+  const d = Math.max(0, new Date(GEO.examDate) - Date.now()) / 1000;
+  const days = Math.floor(d / 86400), h = Math.floor(d % 86400 / 3600), m = Math.floor(d % 3600 / 60);
+  UI.$('#cd').innerHTML = d > 0
+    ? `<span class="chip">⏰ עד המבחן:</span><span class="chip"><b>${days}</b> ימים</span><span class="chip"><b>${h}</b> שעות</span><span class="chip"><b>${m}</b> דקות</span>`
+    : `<span class="chip">🍀 בהצלחה במבחן!</span>`;
+}
+countdown(); setInterval(countdown, 30000);
+
+function render() {
+  const D = Store.data, s = Store.subject(SID);
+  UI.$('#coins').textContent = D.profile.coins;
+  UI.$('#streak').innerHTML = `<span class="chip">🔥 ${D.streak.days} ימים ברצף</span><span class="chip">✍️ ${s.answered} תשובות</span>`;
+
+  const LS = Store.game(SID, 'lessons', {});
+  UI.$('#lessonsRow').innerHTML = GEO.topics.map(t => `<span class="chip ${LS[t.id] ? 'ok' : ''}">${LS[t.id] ? '✔' : t.emoji} ${t.name}</span>`).join('');
+  const arch = Store.game(SID, 'arch', { levels: {}, captains: {}, completed: false });
+  const stars = Object.values(arch.levels).reduce((a, b) => a + b, 0);
+  const caps = Object.values(arch.captains).filter(Boolean).length;
+  UI.$('#sArch').innerHTML = `<span class="chip">🏝️ ${caps}/5 איים</span><span class="chip">⭐ ${stars}/45</span>`;
+  UI.$('#gArch').querySelector('.won')?.remove();
+  if (arch.completed) UI.$('#gArch').insertAdjacentHTML('beforeend', '<span class="won">🏆 הושלם!</span>');
+
+  const show = Store.game(SID, 'show', { bestStep: 0, won: false, speedBest: 0 });
+  UI.$('#sShow').innerHTML = `<span class="chip">🪜 שיא: ${show.bestStep}/12</span><span class="chip">⚡ בזק: ${show.speedBest}</span>`;
+  UI.$('#gShow').querySelector('.won')?.remove();
+  if (show.won) UI.$('#gShow').insertAdjacentHTML('beforeend', '<span class="won">🏆 מיליונרית!</span>');
+
+  const best = s.exams.reduce((a, e) => Math.max(a, e.score), 0);
+  UI.$('#req').innerHTML = `<span class="chip ${arch.completed ? 'ok' : ''}">${arch.completed ? '✔' : '○'} ארכיפלג</span>
+    <span class="chip ${show.won ? 'ok' : ''}">${show.won ? '✔' : '○'} רוני שואו</span>
+    ${s.exams.length ? `<span class="chip">🏅 ציון הכי גבוה: ${best}</span><span class="chip">📝 ${s.exams.length} ניסיונות</span>` : ''}`;
+
+  UI.$('#mastery').innerHTML = GEO.topics.map(t => {
+    const ids = GEO.questions.filter(q => q.t === t.id).map(q => q.id);
+    const m = Math.round(Store.mastery(SID, ids) * 100);
+    return `<div class="card" style="--c:${t.color}"><div class="em">${t.emoji}</div><b style="color:${t.color}">${m}%</b><div class="muted" style="font-size:.9rem;margin-bottom:8px">${t.name}</div><div class="bar"><i style="width:${m}%"></i></div></div>`;
+  }).join('');
+}
+render();
+UI.$('#bookmap').innerHTML = Book.mapHtml(GEO.topics);
+
+UI.$$('.game,.exam').forEach(a => a.addEventListener('click', () => Sound.sfx('whoosh')));
+
+UI.$('#bBackup').onclick = () => UI.modal({ emoji: '💾', title: 'קוד גיבוי', html: `<p class="muted">העתיקו את הקוד ושמרו אותו. במכשיר אחר לוחצים "שחזור" ומדביקים.</p><textarea class="code" readonly>${Store.exportCode()}</textarea>`,
+  actions: [{ label: '📋 העתקה', keep: true, onClick: o => { const t = o.querySelector('textarea'); t.select(); navigator.clipboard?.writeText(t.value); UI.toast('הקוד הועתק ✔'); } }, { label: 'סגירה', cls: 'ghost' }] });
+UI.$('#bRestore').onclick = () => UI.modal({ emoji: '📥', title: 'שחזור התקדמות', html: `<textarea class="code" placeholder="הדביקו כאן את קוד הגיבוי"></textarea>`,
+  actions: [{ label: 'שחזור', onClick: o => { try { Store.importCode(o.querySelector('textarea').value); render(); UI.toast('ההתקדמות שוחזרה ✔'); Sound.sfx('star'); } catch (e) { UI.toast('הקוד לא תקין 😕'); } } }, { label: 'ביטול', cls: 'ghost' }] });
+UI.$('#bReset').onclick = () => UI.confirmBox('למחוק את כל ההתקדמות?', '<p class="muted">כוכבים, מטבעות, שיאים וציונים יימחקו. אי אפשר לבטל את זה.</p>', '🗑️ כן, למחוק', () => { Store.reset(); render(); UI.toast('ההתקדמות אופסה'); });
+
+UI.gate({ title: 'מסע אל עולם המפות', sub: 'הכנה למבחן בגאוגרפיה 🗺️', emoji: '🧭', once: 'geo-gate', onStart: fresh => { if (fresh) { Sound.sfx('fanfare'); UI.confetti(50); setTimeout(() => Sound.say('welcome'), 500); } } });
+</script>
+</body>
+</html>

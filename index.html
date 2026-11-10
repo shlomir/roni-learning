@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>האקדמיה של רוני</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎒</text></svg>">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+.hero{text-align:center;padding:50px 0 20px}
+.hero h1{font-size:clamp(2.6rem,9vw,5rem);background:linear-gradient(100deg,var(--gold),var(--coral) 40%,var(--pink) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);font-size:1.2rem}
+.subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin:26px 0 60px}
+.subj{border-radius:28px;padding:24px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:linear-gradient(160deg,var(--card),var(--bg2));min-height:220px;display:flex;flex-direction:column;transition:transform .2s}
+a.subj:hover{transform:translateY(-5px)}
+.subj .e{font-size:3.4rem}
+.subj h3{font-size:1.6rem;margin:8px 0 4px}
+.subj p{color:var(--muted);margin:0 0 12px}
+.subj .chips{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
+.subj.live{background:linear-gradient(160deg,#1478c8,#0b3d7a 60%,#0b2350);border-color:rgba(92,200,255,.5);box-shadow:0 20px 50px rgba(20,120,200,.3)}
+.subj.soon{opacity:.5;border-style:dashed}
+.ver{position:fixed;top:10px;left:12px;font-size:.75rem;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:2px 8px;border-radius:99px;z-index:40}
+</style>
+</head>
+<body>
+<span class="ver">v1.0.0</span>
+<main class="wrap">
+  <section class="hero">
+    <span class="bigemoji" style="font-size:5rem">🎒</span>
+    <h1>האקדמיה של רוני</h1>
+    <p>משחקים שמכינים למבחנים, בכיף 🦄</p>
+  </section>
+  <div class="subjects">
+    <a class="subj live" href="geography-maps/index.html">
+      <span class="e">🗺️</span><h3>גאוגרפיה: עולם המפות</h3>
+      <p>האטלס, שימושי המפה, מפות עתיקות ומפות של ימינו, ושלבי הכנת מפה.</p>
+      <div class="chips"><span class="chip">📅 מבחן: 12/11</span><span class="chip" id="geoPct"></span></div>
+    </a>
+    <div class="subj soon"><span class="e">🔢</span><h3>המבחן הבא</h3><p>בקרוב…</p></div>
+  </div>
+</main>
+<script src="shared/progress.js"></script>
+<script src="shared/sound.js"></script>
+<script src="shared/ui.js"></script>
+<script src="geography-maps/content.js"></script>
+<script>
+UI.stars();
+const ids = GEO.questions.map(q => q.id);
+document.getElementById('geoPct').textContent = '📈 ' + Math.round(Store.mastery(GEO.id, ids) * 100) + '% שליטה';
+</script>
+</body>
+</html>
