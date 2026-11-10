@@ -2,6 +2,10 @@
 
 ### 🌐 [לאתר: shlomir.github.io/roni-learning](https://shlomir.github.io/roni-learning/)
 
+<a href="https://shlomir.github.io/roni-learning/"><img src="qr.svg" width="180" alt="QR code to the site"></a>
+
+📱 סרקי עם מצלמת הטלפון כדי לפתוח את האתר
+
 Hebrew exam-prep game sites for Roni. One folder per exam, with shared sound / progress / exercise-engine modules.
 
 ## Sites
